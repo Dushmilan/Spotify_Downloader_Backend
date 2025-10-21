@@ -1,29 +1,39 @@
-const validator = require('validator');
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 /**
- * Validates a Spotify URL
+ * Validates a Spotify URL by scraping the page
  * @param {string} url - The Spotify URL to validate.
- * @returns {boolean} - Returns true if valid, false otherwise.
+ * @returns {Promise<Object>} - Returns a promise indicating the validity and details.
  */
-function validateSpotifyLink(url) {
-    const spotifyUrlRegex = /^(https?:\/\/)?(www\.)?(spotify\.com)\/(track|album|playlist|artist)\/[a-zA-Z0-9]+(.*)?$/;
+async function validateSpotifyLink(url) {
+    try {
+        const response = await axios.get(url);
 
-    return validator.isURL(url) && spotifyUrlRegex.test(url);
+        // Check if the response status is OK
+        if (response.status === 200) {
+            const $ = cheerio.load(response.data);
+            const title = $('h1').text(); // Adjust based on the HTML structure of the Spotify page
+
+            if (title) {
+                return { valid: true, type: determineType(url), title };
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching the URL:', error.message);
+    }
+
+    return { valid: false, message: 'Resource not found on Spotify.' };
 }
 
-// Example usage:
-const linksToTest = [
-    'https://open.spotify.com/track/7ouMYWpqST9nE1HpVW1S8k',
-    'https://open.spotify.com/album/1A8QhvgdB8x7C06Z9bSblx',
-    'https://open.spotify.com/playlist/37i9dQZF1DXcEbY8IQxV6P',
-    'https://open.spotify.com/artist/1234567890',
-    'https://invalidspotify.com/track/xyz',
-];
+/**
+ * Determines the type of the Spotify resource
+ * @param {string} url - The Spotify URL
+ * @returns {string} - Returns the type of the resource (track, album, playlist, etc.)
+ */
+function determineType(url) {
+    const type = url.split('/')[3];
+    return type.charAt(0).toUpperCase() + type.slice(1); // Capitalize the type
+}
 
-linksToTest.forEach(link => {
-    const isValid = validateSpotifyLink(link);
-    console.log(`The link "${link}" is ${isValid ? 'valid' : 'invalid'}.`);
-});
-module.exports = {
-    validateSpotifyLink,
-};
+module.exports = { validateSpotifyLink };
