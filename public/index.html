@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Track Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1DB954;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #1DB954;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #1ed760;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1DB954;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .track-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Spotify Track Downloader</h1>
+        <form id="downloadForm">
+            <div class="form-group">
+                <label for="spotifyUrl">Spotify Track URL:</label>
+                <input type="text" id="spotifyUrl" name="spotifyUrl" placeholder="Paste Spotify track URL here..." required>
+            </div>
+            <button type="submit" id="downloadBtn">Download Track</button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Extracting metadata and downloading track...</p>
+        </div>
+        
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('downloadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const spotifyUrl = document.getElementById('spotifyUrl').value.trim();
+            const downloadBtn = document.getElementById('downloadBtn');
+            const loading = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            
+            if (!spotifyUrl) {
+                showResult('Please enter a Spotify URL', 'error');
+                return;
+            }
+            
+            // Disable button and show loading
+            downloadBtn.disabled = true;
+            loading.style.display = 'block';
+            resultDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/download-spotify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ spotifyUrl: spotifyUrl })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let resultHTML = `
+                        <h3>✅ Download Successful!</h3>
+                        <div class="track-info">
+                            <p><strong>Title:</strong> ${data.metadata.title}</p>
+                            <p><strong>Artist:</strong> ${data.metadata.artist}</p>
+                            <p><strong>Duration:</strong> ${Math.floor(data.metadata.duration / 60)}:${(data.metadata.duration % 60).toString().padStart(2, '0')}</p>
+                        </div>
+                        <p><a href="${data.downloadPath}" download target="_blank">Click here to download the MP3 file</a></p>
+                    `;
+                    showResult(resultHTML, 'success');
+                } else {
+                    showResult(`Error: ${data.error || 'Unknown error occurred'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Network error: ${error.message}`, 'error');
+            } finally {
+                // Re-enable button and hide loading
+                downloadBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
