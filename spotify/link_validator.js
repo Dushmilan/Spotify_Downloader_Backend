@@ -1,59 +1,86 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
+// filename: spotifyMetaScraper.js
+// Description: Extracts Spotify track metadata without Spotify API using network interception
 
-/**
- * Validates a Spotify URL by scraping the page
- * @param {string} url - The Spotify URL to validate
- * @returns {Promise<Object>} - Returns a promise indicating the validity and details
- */
-async function validateSpotifyLink(url) {
-    try {
-        const response = await axios.get(url);
+import puppeteer from "puppeteer";
 
-        // Check if the response status is OK
-        if (response.status === 200) {
-            const $ = cheerio.load(response.data);
-            const title = $('h1').text(); // Extract title
-            let artist = ""; 
-
-            // Extract artist name based on HTML structure
-            if ($('a[data-testid="entity-name"]').length) {
-                artist = $('a[data-testid="entity-name"]').text(); // Targeting the artist link
-            } else if ($('span[data-testid="artist-name"]').length) {
-                artist = $('span[data-testid="artist-name"]').text(); // Another structure check
-            }
-
-            if (title && artist) {
-                return { valid: true, type: determineType(url), title, artist };
-            }
-        }
-    } catch (error) {
-        console.error('Error fetching the URL:', error.message);
-    }
-
-    return { valid: false, message: 'Resource not found on Spotify.' };
+function validateSpotifyUrl(url) {
+  const regex = /^https?:\/\/open\.spotify\.com\/(track|album|playlist)\/[A-Za-z0-9]+(\?.*)?$/;
+  return regex.test(url);
 }
 
-/**
- * Determines the type of the Spotify resource
- * @param {string} url - The Spotify URL
- * @returns {string} - Returns the type of resource (track, album, playlist, etc.)
- */
-function determineType(url) {
-    const type = url.split('/')[3];
-    return type.charAt(0).toUpperCase() + type.slice(1); // Capitalize the type
+async function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function getSpotifyMetadata(url) {
+  if (!validateSpotifyUrl(url)) {
+    throw new Error("Invalid Spotify URL format");
+  }
+
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+
+  const page = await browser.newPage();
+  let trackData = null;
+
+  await page.setUserAgent(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  );
+
+  page.on("response", async (response) => {
+    const reqUrl = response.url();
+    if (reqUrl.includes("spotify.com") && reqUrl.includes("graphql")) {
+      try {
+        const json = await response.json();
+        const payload = JSON.stringify(json);
+        if (payload.includes("trackUnion")) {
+          trackData = json;
+        }
+      } catch {}
+    }
+  });
+
+  try {
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
+    await delay(5000); // give Spotify time to fetch track data
+    await browser.close();
+
+    if (!trackData) throw new Error("No metadata found (GraphQL data not captured)");
+
+    const trackUnion =
+      trackData.data?.trackUnion || trackData.data?.track || null;
+
+    if (!trackUnion) throw new Error("No track data in GraphQL payload");
+
+    return {
+      title: trackUnion.name || null,
+      artist: trackUnion.artists?.items?.[0]?.profile?.name || null,
+      album: trackUnion.albumOfTrack?.name || null,
+      cover_url:
+        trackUnion.albumOfTrack?.coverArt?.sources?.[0]?.url || null,
+      duration:
+        trackUnion.duration?.totalMilliseconds
+          ? trackUnion.duration.totalMilliseconds / 1000
+          : null,
+    };
+  } catch (err) {
+    await browser.close();
+    throw err;
+  }
 }
 
 // Example usage
-const linksToTest = [
-    'https://open.spotify.com/track/0m89ibOSeZNEtshbZ3w472?si=19bdfb8be4554939',
-    'https://open.spotify.com/album/1A8QhvgdB8x7C06Z9bSblx',
-    'https://open.spotify.com/playlist/37i9dQZF1DXcEbY8IQxV6P',
-];
-
 (async () => {
-    for (const link of linksToTest) {
-        const result = await validateSpotifyLink(link);
-        console.log(`The link "${link}" is ${result.valid ? 'valid' : 'invalid'}. ${result.title ? `Title: ${result.title}` : result.message}${result.artist ? `, Artist: ${result.artist}` : ''}`);
-    }
+  const url = "https://open.spotify.com/track/2takcwOaAZWiXQijPHIx7B";
+  try {
+    const metadata = await getSpotifyMetadata(url);
+    console.log(metadata);
+  } catch (e) {
+    console.error("Error:", e.message);
+  }
 })();
+
+export { getSpotifyMetadata, validateSpotifyUrl };
