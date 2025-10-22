@@ -1,8 +1,9 @@
+// models/SpotifyModel.js
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-class PythonService {
+class SpotifyModel {
   constructor() {
     this.PYTHON_PATH = this.findPython();
   }
@@ -24,11 +25,7 @@ class PythonService {
     return 'C:\\\\Users\\\\LENOVO\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe';
   }
 
-  getPythonPath() {
-    return this.PYTHON_PATH;
-  }
-
-  // Helper function to extract Spotify metadata using Python
+  // Extract Spotify metadata using Python
   async extractSpotifyMetadata(spotifyUrl) {
     return new Promise((resolve, reject) => {
       const pythonProcess = spawn(this.PYTHON_PATH, [
@@ -69,7 +66,7 @@ class PythonService {
     });
   }
 
-  // Helper function to download from YouTube using Python and yt-dlp
+  // Download from YouTube using Python and yt-dlp
   async downloadFromYouTube(metadata) {
     return new Promise((resolve, reject) => {
       const { title, artist } = metadata;
@@ -124,6 +121,37 @@ class PythonService {
       });
     });
   }
+
+  async downloadFromYouTubeUrl(youtubeUrl) {
+    return new Promise((resolve, reject) => {
+      const downloadsDir = path.join(__dirname, '../downloads');
+      if (!fs.existsSync(downloadsDir)) {
+        fs.mkdirSync(downloadsDir, { recursive: true });
+      }
+
+      const pythonProcess = spawn(this.PYTHON_PATH, [
+        path.join(__dirname, '../yt-dlp', 'downloader.py'),
+        youtubeUrl,
+        downloadsDir
+      ]);
+
+      pythonProcess.stdout.on('data', (data) => {
+        console.log(data.toString());
+      });
+
+      pythonProcess.stderr.on('data', (data) => {
+        console.error(data.toString());
+      });
+
+      pythonProcess.on('close', (code) => {
+        if (code === 0) {
+          resolve({ success: true, message: 'Download completed' });
+        } else {
+          resolve({ success: false, error: `Download failed with code ${code}` });
+        }
+      });
+    });
+  }
 }
 
-module.exports = PythonService;
+module.exports = SpotifyModel;

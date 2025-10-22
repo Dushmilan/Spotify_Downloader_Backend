@@ -2,11 +2,12 @@
   "name": "spotify_downloader_backend",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "server-mvc.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server-mvc.js",
+    "dev": "nodemon server-mvc.js",
+    "legacy": "node server.js"
   },
   "repository": {
     "type": "git",
