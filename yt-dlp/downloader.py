@@ -1,16 +1,13 @@
 import yt_dlp
 import os
 import time
+import json
 
-def download_audio(url, output_path):
+def extract_audio_info(url):
+    """Extract audio information without downloading"""
     ydl_opts = {
         'format': 'bestaudio/best',
-        'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192'
-        }],
+        'extract_flat': True,  # Only extract info, don't download
         'http_headers': {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -23,31 +20,22 @@ def download_audio(url, output_path):
         'force_ipv4': True,
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        result = ydl.download([url])
-        return result
+        try:
+            result = ydl.extract_info(url, download=False)
+            return result
+        except Exception as e:
+            print(f"Error extracting info: {e}", file=sys.stderr)
+            return None
 
-def search_and_download_track(track_name, artist_name, output_path):
-    """Search for a track on alternative platforms and download it"""
+def search_and_extract_audio(track_name, artist_name):
+    """Search for a track on alternative platforms and return audio info"""
     query = f"{track_name} {artist_name} audio official"
-    # Use YouTube Music specifically instead of general YouTube to find official audio
-    search_query = f"ytmsearch1:{query}"  # ytmsearch for YouTube Music
+    # Use YouTube search instead of YouTube Music which may not be supported in all versions
+    search_query = f"ytsearch1:{query}"  # Standard YouTube search
     
-    # First, search and get the video info without downloading
     ydl_opts = {
         'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192'
-        }],
-        'postprocessor_args': [
-            '-ar', '44100'
-        ],
-        'prefer_ffmpeg': True,
-        'audioquality': '0',
-        'extractaudio': True,
-        'outtmpl': os.path.join(output_path, f"{track_name.replace('/', '_').replace(':', '_')} - {artist_name.replace('/', '_').replace(':', '_')}.%(ext)s"),
-        'restrictfilenames': True,
+        'extract_flat': True,  # Only extract info, don't download
         'http_headers': {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
@@ -55,31 +43,30 @@ def search_and_download_track(track_name, artist_name, output_path):
     
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
-            # Search for the track using YouTube Music
-            result = ydl.extract_info(search_query, download=True)
-            return result
+            # Search for the track using YouTube
+            result = ydl.extract_info(search_query, download=False)
+            if result and 'entries' in result and result['entries']:
+                # Return the first entry
+                return result['entries'][0]
         except Exception as e:
-            print(f"Error downloading track from YouTube Music: {e}")
+            print(f"Error searching on YouTube: {e}", file=sys.stderr)
             
-            # If YouTube Music fails, try other platforms
+            # If YouTube fails, try other platforms
             try:
                 alternative_search = f"scsearch1:{query}"  # SoundCloud search
-                result = ydl.extract_info(alternative_search, download=True)
-                return result
+                result = ydl.extract_info(alternative_search, download=False)
+                if result and 'entries' in result and result['entries']:
+                    # Return the first entry
+                    return result['entries'][0]
             except Exception as e2:
-                print(f"Error downloading track from SoundCloud: {e2}")
+                print(f"Error searching on SoundCloud: {e2}", file=sys.stderr)
                 return None
 
-def download_spotify_url(url, output_path):
-    """Download audio from a Spotify URL directly if supported by yt-dlp"""
+def extract_spotify_url_info(url):
+    """Extract audio info from a Spotify URL if supported by yt-dlp"""
     ydl_opts = {
         'format': 'bestaudio/best',
-        'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192'
-        }],
+        'extract_flat': True,  # Only extract info, don't download
         'http_headers': {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -93,36 +80,73 @@ def download_spotify_url(url, output_path):
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
-            result = ydl.download([url])
+            result = ydl.extract_info(url, download=False)
             return result
         except Exception as e:
-            print(f"Direct Spotify download failed: {e}")
-            # Fallback to search approach if direct download doesn't work
-            print("Falling back to search approach...")
-            # Extract possible track info from URL or search
+            print(f"Spotify URL info extraction failed: {e}", file=sys.stderr)
+            # Fallback to search approach if direct extraction doesn't work
             return None
 
 # Example usage
 if __name__ == "__main__":
     import sys
     
-    if len(sys.argv) < 3:
-        print("Usage: python downloader.py <url_or_trackname> <artistname> <output_path>")
-        print("Or: python downloader.py <spotify_url> <output_path>")
+    if len(sys.argv) < 2:
+        print("Usage: python downloader.py <url_or_trackname> [artist_name]")
         sys.exit(1)
     
-    if len(sys.argv) == 4:  # Search for track using metadata
+    if len(sys.argv) == 3:  # Search for track using metadata
         track_name = sys.argv[1]
         artist_name = sys.argv[2]
-        output_path = sys.argv[3]
-        search_and_download_track(track_name, artist_name, output_path)
-    elif len(sys.argv) == 3:  # Direct Spotify URL download
+        result = search_and_extract_audio(track_name, artist_name)
+        
+        if result:
+            print(json.dumps({
+                'success': True,
+                'title': result.get('title', ''),
+                'url': result.get('url', ''),
+                'duration': result.get('duration'),
+                'uploader': result.get('uploader', ''),
+                'webpage_url': result.get('webpage_url', ''),
+                'formats': result.get('formats', [])
+            }))
+        else:
+            print(json.dumps({'success': False, 'error': 'Could not find audio'}), file=sys.stderr)
+            sys.exit(1)
+            
+    elif len(sys.argv) == 2:  # Extract info from URL
         url = sys.argv[1]
-        output_path = sys.argv[2]
         
         # Check if it's a Spotify URL
         if "spotify.com" in url or "open.spotify.com" in url or url.startswith("spotify:"):
-            download_spotify_url(url, output_path)
+            result = extract_spotify_url_info(url)
         else:
-            # For other URLs, we could add more logic as needed
-            download_audio(url, output_path)
+            # For other URLs, extract info directly
+            result = extract_audio_info(url)
+        
+        if result:
+            # Handle both single entries and search results
+            if 'entries' in result and result['entries']:
+                entry = result['entries'][0]
+                print(json.dumps({
+                    'success': True,
+                    'title': entry.get('title', ''),
+                    'url': entry.get('url', ''),
+                    'duration': entry.get('duration'),
+                    'uploader': entry.get('uploader', ''),
+                    'webpage_url': entry.get('webpage_url', ''),
+                    'formats': entry.get('formats', [])
+                }))
+            else:
+                print(json.dumps({
+                    'success': True,
+                    'title': result.get('title', ''),
+                    'url': result.get('url', ''),
+                    'duration': result.get('duration'),
+                    'uploader': result.get('uploader', ''),
+                    'webpage_url': result.get('webpage_url', ''),
+                    'formats': result.get('formats', [])
+                }))
+        else:
+            print(json.dumps({'success': False, 'error': 'Could not extract audio info'}), file=sys.stderr)
+            sys.exit(1)

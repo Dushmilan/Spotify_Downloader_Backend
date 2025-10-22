@@ -12,40 +12,48 @@ class SpotifyController {
         return res.status(400).json({ error: 'Spotify URL is required' });
       }
 
-      // First, try to download directly from Spotify URL
-      console.log('Attempting direct download from Spotify URL...');
-      const directDownloadResult = await this.model.downloadFromSpotifyUrl(spotifyUrl);
+      // First, try to get audio info directly from Spotify URL
+      console.log('Attempting to get audio info directly from Spotify URL...');
+      const directAudioInfoResult = await this.model.getAudioInfoFromSpotifyUrl(spotifyUrl);
       
-      if (directDownloadResult.success) {
+      if (directAudioInfoResult.success) {
         res.json({ 
           success: true, 
-          downloadPath: directDownloadResult.filePath,
-          message: 'Track downloaded successfully from Spotify URL'
+          audioUrl: directAudioInfoResult.audioUrl,
+          title: directAudioInfoResult.title,
+          webpageUrl: directAudioInfoResult.webpageUrl,
+          duration: directAudioInfoResult.duration,
+          uploader: directAudioInfoResult.uploader,
+          message: 'Audio info retrieved successfully from Spotify URL'
         });
         return;
       }
       
-      // If direct download fails, extract metadata and search for the track on alternative platforms
-      console.log('Direct download failed, extracting metadata from Spotify URL...');
+      // If direct extraction fails, extract metadata and search for the track on alternative platforms
+      console.log('Direct audio info extraction failed, extracting metadata from Spotify URL...');
       const metadata = await this.model.extractSpotifyMetadata(spotifyUrl);
       
       if (!metadata) {
         return res.status(500).json({ error: 'Failed to extract Spotify metadata' });
       }
 
-      // Then, search and download from alternative platforms using the metadata
-      console.log('Searching and downloading from alternative platforms...');
-      const downloadResult = await this.model.downloadFromSpotifyMetadata(metadata);
+      // Then, search for audio on alternative platforms using the metadata
+      console.log('Searching for audio on alternative platforms...');
+      const audioInfoResult = await this.model.getAudioInfoFromSpotifyMetadata(metadata);
       
-      if (downloadResult.success) {
+      if (audioInfoResult.success) {
         res.json({ 
           success: true, 
           metadata: metadata,
-          downloadPath: downloadResult.filePath,
-          message: 'Track downloaded successfully'
+          audioUrl: audioInfoResult.audioUrl,
+          title: audioInfoResult.title,
+          webpageUrl: audioInfoResult.webpageUrl,
+          duration: audioInfoResult.duration,
+          uploader: audioInfoResult.uploader,
+          message: 'Audio info retrieved successfully'
         });
       } else {
-        res.status(500).json({ error: downloadResult.error || 'Failed to download track' });
+        res.status(500).json({ error: audioInfoResult.error || 'Failed to find audio track' });
       }
     } catch (error) {
       console.error('Error processing request:', error);

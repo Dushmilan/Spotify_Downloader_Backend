@@ -66,22 +66,15 @@ class SpotifyModel {
     });
   }
 
-  // Download audio based on Spotify metadata using Python and yt-dlp
-  async downloadFromSpotifyMetadata(metadata) {
+  // Get audio info based on Spotify metadata using Python and yt-dlp
+  async getAudioInfoFromSpotifyMetadata(metadata) {
     return new Promise((resolve, reject) => {
       const { title, artist } = metadata;
-      const downloadsDir = path.join(__dirname, '../downloads');
-      
-      // Ensure downloads directory exists
-      if (!fs.existsSync(downloadsDir)) {
-        fs.mkdirSync(downloadsDir, { recursive: true });
-      }
 
       const pythonProcess = spawn(this.PYTHON_PATH, [
         path.join(__dirname, '../yt-dlp', 'downloader.py'),
         title,
-        artist,
-        downloadsDir
+        artist
       ]);
 
       let result = '';
@@ -97,19 +90,29 @@ class SpotifyModel {
 
       pythonProcess.on('close', (code) => {
         if (code === 0) {
-          // Find the downloaded file
-          const files = fs.readdirSync(downloadsDir);
-          const audioFile = files.find(file => file.endsWith('.mp3'));
-          
-          if (audioFile) {
-            resolve({
-              success: true,
-              filePath: path.join('/downloads', audioFile)
-            });
-          } else {
+          try {
+            const audioInfo = JSON.parse(result.trim());
+            if (audioInfo.success) {
+              resolve({
+                success: true,
+                title: audioInfo.title,
+                audioUrl: audioInfo.url,  // This is the direct audio URL
+                webpageUrl: audioInfo.webpage_url,
+                duration: audioInfo.duration,
+                uploader: audioInfo.uploader,
+                formats: audioInfo.formats
+              });
+            } else {
+              resolve({
+                success: false,
+                error: 'Could not find audio for the given track'
+              });
+            }
+          } catch (parseError) {
+            console.error('Error parsing audio info JSON:', result);
             resolve({
               success: false,
-              error: 'Audio file not found after download'
+              error: 'Failed to parse audio info from Python script'
             });
           }
         } else {
@@ -122,18 +125,12 @@ class SpotifyModel {
     });
   }
 
-  // Download directly from a Spotify URL if yt-dlp supports it
-  async downloadFromSpotifyUrl(spotifyUrl) {
+  // Get audio info directly from a Spotify URL if yt-dlp supports it
+  async getAudioInfoFromSpotifyUrl(spotifyUrl) {
     return new Promise((resolve, reject) => {
-      const downloadsDir = path.join(__dirname, '../downloads');
-      if (!fs.existsSync(downloadsDir)) {
-        fs.mkdirSync(downloadsDir, { recursive: true });
-      }
-
       const pythonProcess = spawn(this.PYTHON_PATH, [
         path.join(__dirname, '../yt-dlp', 'downloader.py'),
-        spotifyUrl,
-        downloadsDir
+        spotifyUrl
       ]);
 
       let result = '';
@@ -149,19 +146,29 @@ class SpotifyModel {
 
       pythonProcess.on('close', (code) => {
         if (code === 0) {
-          // Find the downloaded file
-          const files = fs.readdirSync(downloadsDir);
-          const audioFile = files.find(file => file.endsWith('.mp3'));
-          
-          if (audioFile) {
-            resolve({
-              success: true,
-              filePath: path.join('/downloads', audioFile)
-            });
-          } else {
+          try {
+            const audioInfo = JSON.parse(result.trim());
+            if (audioInfo.success) {
+              resolve({
+                success: true,
+                title: audioInfo.title,
+                audioUrl: audioInfo.url,  // This is the direct audio URL
+                webpageUrl: audioInfo.webpage_url,
+                duration: audioInfo.duration,
+                uploader: audioInfo.uploader,
+                formats: audioInfo.formats
+              });
+            } else {
+              resolve({
+                success: false,
+                error: 'Could not extract audio info from the given URL'
+              });
+            }
+          } catch (parseError) {
+            console.error('Error parsing audio info JSON:', result);
             resolve({
               success: false,
-              error: 'Audio file not found after download'
+              error: 'Failed to parse audio info from Python script'
             });
           }
         } else {

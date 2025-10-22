@@ -1,6 +1,9 @@
 import sys
 import json
-from .spotify_client import SpotifyClient
+import os
+# Add the parent directory to the path so we can import from the same directory
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from spotify_client import SpotifyClient
 
 def extract_metadata(track_url):
     # Initialize the client

@@ -15,7 +15,4 @@ app.use(express.static('public')); // View layer - static files
 // Routes
 app.use('/', spotifyRoutes); // Controller layer handles routing
 
-// Serve downloads
-app.use('/downloads', express.static('downloads'));
-
 module.exports = { app, port };
