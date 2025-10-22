@@ -41,15 +41,19 @@ def search_and_extract_audio(track_name, artist_name):
     clean_artist_name = re.sub(r'\(.*remix.*\)|\[.*remix.*\]', '', artist_name, flags=re.IGNORECASE).strip()
     clean_track_name = re.sub(r'\(.*remix.*\)|\[.*remix.*\]', '', clean_track_name, flags=re.IGNORECASE).strip()
     
-    # Create multiple search queries in order of preference
+    # Create multiple search queries in order of preference - emphasize artist name to improve results
     search_queries = [
-        f"{clean_track_name} {clean_artist_name} official audio",
-        f"{clean_track_name} {clean_artist_name} official music video",
-        f"{clean_artist_name} - {clean_track_name} official",
-        f"{clean_track_name} {clean_artist_name} audio",
-        f"{clean_artist_name} {clean_track_name} official",
-        f"{clean_track_name} {clean_artist_name}",
+        f"{clean_artist_name} {clean_track_name} official audio",  # Artist first
+        f"{clean_artist_name} {clean_track_name} official music video",  # Artist first
+        f"{clean_artist_name} - {clean_track_name} official",  # Artist - Track format
+        f"{clean_artist_name} {clean_track_name} audio",  # Artist first
+        f"{clean_track_name} {clean_artist_name} official audio",  # Track-artist format
+        f"{clean_track_name} {clean_artist_name} audio",  # Track-artist format
+        f"{clean_artist_name} {clean_track_name}",  # Basic artist track
+        f"{clean_track_name} {clean_artist_name}",  # Basic track artist
     ]
+    
+    print(f"Searching YouTube for queries: {search_queries}", file=sys.stderr)  # Log the search queries
     
     # First, try to find the video using YouTube with yt-dlp
     ydl_opts = {
@@ -65,28 +69,34 @@ def search_and_extract_audio(track_name, artist_name):
         for query in search_queries:
             try:
                 search_query = f"ytsearch5:{query}"  # Search for 5 results to have more options
+                print(f"Trying YouTube search: {search_query}", file=sys.stderr)  # Log the search
                 result = ydl.extract_info(search_query, download=False)
                 if result and 'entries' in result and result['entries']:
+                    print(f"Found {len(result['entries'])} results for query: {query}", file=sys.stderr)  # Log results
                     # Filter and sort results to find the best match
                     best_match = find_best_match(result['entries'], clean_track_name, clean_artist_name)
                     if best_match:
+                        print(f"Best match found: {best_match.get('title', 'Unknown')} - {best_match.get('webpage_url', 'No URL')}", file=sys.stderr)  # Log best match
                         return best_match
             except Exception as e:
                 print(f"Error searching on YouTube with query '{query}': {e}", file=sys.stderr)
                 continue  # Try the next query
         
         # If YouTube search fails, try other platforms
+        print("Trying SoundCloud search as fallback...", file=sys.stderr)  # Log fallback
         for query in search_queries:
             try:
                 alternative_search = f"scsearch1:{query}"  # SoundCloud search
                 result = ydl.extract_info(alternative_search, download=False)
                 if result and 'entries' in result and result['entries']:
-                    # Return the first entry
-                    return result['entries'][0]
+                    entry = result['entries'][0]
+                    print(f"SoundCloud fallback result: {entry.get('title', 'Unknown')} - {entry.get('webpage_url', 'No URL')}", file=sys.stderr)  # Log fallback result
+                    return entry
             except Exception as e2:
                 print(f"Error searching on SoundCloud with query '{query}': {e2}", file=sys.stderr)
                 continue  # Try the next query
         
+        print("No results found on any platform", file=sys.stderr)  # Log no results
         return None
 
 def find_best_match(entries, track_name, artist_name):
@@ -159,6 +169,8 @@ def download_audio(url, output_path):
     if not url or not output_path:
         print("URL and output path are required", file=sys.stderr)
         return False
+    
+    print(f"Starting download from URL: {url}", file=sys.stderr)  # Log the URL being downloaded
     
     # Ensure the downloads directory exists
     downloads_dir = os.path.dirname(output_path)
@@ -315,17 +327,74 @@ if __name__ == "__main__":
         sys.exit(1)
     
     try:
-        if sys.argv[1] == 'download' and len(sys.argv) == 4:  # Download audio
-            _, cmd, url, output_path = sys.argv
+        # Handle the case where arguments may have been split due to spaces
+        # Try to intelligently reconstruct the arguments based on expected patterns
+        
+        if sys.argv[1] == 'download' and len(sys.argv) >= 3:
+            # The download command expects: script.py download url output_path
+            # Find where the URL ends and output path begins
+            # Since output_path is typically a path, we can look for that
+            for i in range(2, len(sys.argv)):
+                arg = sys.argv[i]
+                if arg.startswith('/') or arg.startswith('./') or ':' in arg or 'C:' in arg or 'D:' in arg:
+                    # This looks like a file path - reconstruct the URL from args 2 to i-1
+                    url = ' '.join(sys.argv[2:i])
+                    output_path = ' '.join(sys.argv[i:])
+                    break
+            else:
+                # If no path found, assume the last arg is the output path
+                url = sys.argv[2]
+                output_path = sys.argv[3] if len(sys.argv) > 3 else sys.argv[2]
+            
             success = download_audio(url, output_path)
             if success:
                 print(json.dumps({'success': True, 'message': 'Download completed successfully'}))
             else:
                 print(json.dumps({'success': False, 'error': 'Download failed'}), file=sys.stderr)
                 sys.exit(1)
-        elif len(sys.argv) == 3:  # Search for track using metadata
-            track_name = sys.argv[1]
-            artist_name = sys.argv[2]
+        elif len(sys.argv) >= 3:  # Search for track using metadata
+            # Arguments might have been split due to spaces in track names
+            # The last argument is most likely to be the path (if any), so let's assume the last argument is the path
+            # and work backward to reconstruct track name and artist
+            
+            args = sys.argv[1:]  # Skip script name
+            
+            # Check if the last argument looks like a path
+            if (len(args) >= 3 and 
+                (args[-1].startswith('/') or args[-1].startswith('./') or ':' in args[-1] or 'C:' in args[-1] or 'D:' in args[-1])):
+                # This is probably the downloads directory - reconstruct title and artist from the first parts
+                downloads_dir = args[-1]
+                remaining_args = args[:-1]
+                
+                # For "track_name artist_name" pattern, we could try different splits
+                # but for now, let's just join the remaining args as the track name and use a default artist
+                # Actually, for metadata search, we expect exactly track_name and artist_name
+                if len(remaining_args) >= 2:
+                    track_name = remaining_args[0]
+                    artist_name = remaining_args[1]
+                else:
+                    track_name = remaining_args[0] if remaining_args else "Unknown"
+                    artist_name = "Unknown"
+            else:
+                # Just title and artist (or malformed)
+                if len(args) >= 2:
+                    track_name = args[0]  # First part
+                    artist_name = args[1]  # Second part
+                    # If there are more parts due to spaces, we need to reconstruct
+                    if len(args) > 2:
+                        # Assume everything after the first space belongs to the track name
+                        # Actually, let's try multiple approaches to determine the split
+                        track_name = args[0]
+                        artist_name = args[1]
+                        # If there are more arguments, we need to figure out whether they belong to track name or artist name
+                        # For now, a simple approach - last of the extra arguments is artist, rest join to track name
+                        if len(args) > 2:
+                            # For a more sophisticated approach, we could try to detect where the artist name starts
+                            # But for now, joining remaining arguments to artist_name as a simple solution
+                            artist_name = ' '.join(args[1:])
+                else:
+                    track_name = args[0] if args else "Unknown"
+                    artist_name = "Unknown"
             
             # Validate inputs
             if not track_name or not artist_name:

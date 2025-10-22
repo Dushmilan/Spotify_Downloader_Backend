@@ -32,11 +32,15 @@ class YouTubeService {
         fs.mkdirSync(downloadsDir, { recursive: true });
       }
 
+      logger.info(`Searching YouTube for: "${metadata.title}" by "${metadata.artist}"`);
+      
       // Execute the Python YouTube downloader script
       const result = await PythonService.executeScript(
         config.pythonScripts.youtubeDownloader,
         [metadata.title, metadata.artist, downloadsDir]
       );
+
+      logger.info(`YouTube search result: ${JSON.stringify(result)}`);
 
       // Find the downloaded file
       const files = fs.readdirSync(downloadsDir);
@@ -50,6 +54,7 @@ class YouTubeService {
           fileName: audioFile
         };
       } else {
+        logger.warn(`No audio file found after YouTube download attempt for: "${metadata.title}" by "${metadata.artist}"`);
         throw new Error('Audio file not found after download');
       }
     } catch (error) {

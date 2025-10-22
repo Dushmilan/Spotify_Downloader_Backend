@@ -29,3 +29,17 @@
 {"level":"error","message":"Python script failed with code 1: {\"success\": false, \"error\": \"Invalid arguments\"}\r\n","service":"spotify-downloader","timestamp":"2025-10-22T17:45:28.041Z"}
 {"level":"error","message":"Error downloading from YouTube: Python script failed with code 1: {\"success\": false, \"error\": \"Invalid arguments\"}\r\n","service":"spotify-downloader","timestamp":"2025-10-22T17:45:28.042Z"}
 {"level":"error","message":"Error in downloadSpotify controller: Python script failed with code 1: {\"success\": false, \"error\": \"Invalid arguments\"}\r\n","service":"spotify-downloader","timestamp":"2025-10-22T17:45:28.042Z"}
+{"level":"error","message":"Error downloading from YouTube: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T17:53:43.519Z"}
+{"level":"error","message":"Error in downloadSpotify controller: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T17:53:43.519Z"}
+{"level":"error","message":"Error downloading from YouTube: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:00:10.158Z"}
+{"level":"error","message":"Error in downloadSpotify controller: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:00:10.158Z"}
+{"level":"error","message":"Error downloading from YouTube: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:02:29.708Z"}
+{"level":"error","message":"Error in downloadSpotify controller: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:02:29.709Z"}
+{"level":"error","message":"Error downloading from YouTube: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:03:05.016Z"}
+{"level":"error","message":"Error in downloadSpotify controller: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:03:05.016Z"}
+{"level":"error","message":"Error downloading from YouTube: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:03:23.254Z"}
+{"level":"error","message":"Error in downloadSpotify controller: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:03:23.254Z"}
+{"level":"error","message":"Error downloading from YouTube: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:04:02.477Z"}
+{"level":"error","message":"Error in downloadSpotify controller: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:04:02.477Z"}
+{"level":"error","message":"Error downloading from YouTube: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:12:40.701Z"}
+{"level":"error","message":"Error in downloadSpotify controller: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:12:40.701Z"}
