@@ -1,14 +1,14 @@
 const { spawn } = require('child_process');
 const path = require('path');
 
-// Test the Python scripts directly
+// Test the Python scripts directly with new structure
 async function testPythonScripts() {
-    console.log('Testing Python scripts directly...');
+    console.log('Testing Python scripts with new structure...');
 
     // Test metadata extraction
     console.log('\n1. Testing metadata extraction:');
     const metadataProcess = spawn('py', [
-        path.join(__dirname, 'spotify', 'metadata_extractor.py'),
+        path.join(__dirname, 'python', 'spotify', 'metadata_extractor.py'),
         'https://open.spotify.com/track/4A1T3FWBYEi5XQ8eLv9rFs?si=ebdb810768264f8a'
     ]);
 
@@ -25,9 +25,9 @@ async function testPythonScripts() {
         
         if (code === 0) {
             // Test yt-dlp download
-            console.log('\n2. Testing yt-dlp download:');
+            console.log('\n2. Testing YouTube download:');
             const downloadProcess = spawn('py', [
-                path.join(__dirname, 'yt-dlp', 'downloader.py'),
+                path.join(__dirname, 'python', 'downloader', 'youtube_downloader.py'),
                 'Shape of You',  // Example track name
                 'Ed Sheeran',    // Example artist name
                 path.join(__dirname, 'downloads')
