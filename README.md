@@ -85,6 +85,14 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
 SPOTIFY_REDIRECT_URI=your_spotify_redirect_uri
 ```
 
+To get Spotify API credentials:
+1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Create a new app
+3. Copy the Client ID and Client Secret
+4. Add your redirect URI (typically `http://localhost:3000/callback` for local development)
+
+Without Spotify API credentials, the system will use web scraping as a fallback, which may be less reliable.
+
 ## File Structure
 
 ```

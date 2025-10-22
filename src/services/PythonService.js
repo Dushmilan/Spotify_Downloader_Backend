@@ -33,13 +33,29 @@ class PythonService {
       pythonProcess.on('close', (code) => {
         if (code === 0) {
           try {
-            // Try to parse JSON output, otherwise return raw output
+            // Try to parse JSON output from multi-line stdout
             let result;
             try {
+              // Try to parse the entire output as JSON first (for backward compatibility)
               result = JSON.parse(stdout.trim());
             } catch (e) {
-              // If not JSON, return the raw output
-              result = stdout.trim();
+              // If that fails, try to find JSON within the multi-line output
+              const lines = stdout.split('\n').map(line => line.trim()).filter(line => line);
+              for (let i = lines.length - 1; i >= 0; i--) {
+                try {
+                  // Try parsing each line from bottom to top (last line is most likely to be JSON)
+                  result = JSON.parse(lines[i]);
+                  break; // If parsing succeeds, we found our JSON
+                } catch {
+                  // Continue to previous line
+                  continue;
+                }
+              }
+              
+              // If we still couldn't parse any line as JSON, return raw output
+              if (!result) {
+                result = stdout.trim();
+              }
             }
             logger.info(`Python script executed successfully`);
             resolve(result);

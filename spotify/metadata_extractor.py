@@ -20,10 +20,13 @@ def extract_metadata(track_url):
             'duration': track.get('duration_ms', 0) / 1000,
             'album': track.get('album', {}).get('name', 'Unknown'),
             'release_date': track.get('album', {}).get('release_date', ''),
-            'track_url': track_url
+            'track_url': track_url,
+            # Also provide fields with the expected names for backward compatibility
+            'name': track.get('name', 'Unknown'),
+            'artists': track.get('artists', [{'name': 'Unknown'}])
         }
         
-        # Print JSON result to stdout
+        # Print JSON result to stdout (this will be captured by Node.js)
         print(json.dumps(result))
         
         return result
