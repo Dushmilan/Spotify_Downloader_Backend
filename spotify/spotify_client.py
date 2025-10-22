@@ -1,6 +1,7 @@
 import requests
 from urllib.parse import urlparse, parse_qs
 import os
+import sys
 
 class SpotifyClient:
     def __init__(self):
@@ -96,7 +97,7 @@ class SpotifyClient:
             
             # If no API credentials or API request failed, try to extract information from the web page
             # This is a fallback that might work without API credentials, but is less reliable
-            print("Using web scraping fallback to get track info...")
+            print("Using web scraping fallback to get track info...", file=sys.stderr)
             web_url = f'https://open.spotify.com/track/{track_id}'
             response = self.session.get(web_url)
             

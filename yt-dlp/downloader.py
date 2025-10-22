@@ -2,6 +2,7 @@ import yt_dlp
 import os
 import time
 import json
+import re
 
 def extract_audio_info(url):
     """Extract audio information without downloading"""
@@ -29,9 +30,20 @@ def extract_audio_info(url):
 
 def search_and_extract_audio(track_name, artist_name):
     """Search for a track on alternative platforms and return audio info"""
-    query = f"{track_name} {artist_name} audio official"
-    # Use YouTube search instead of YouTube Music which may not be supported in all versions
-    search_query = f"ytsearch1:{query}"  # Standard YouTube search
+    # Clean up the track name and artist name to make better search queries
+    
+    # Remove extra text that might be in the metadata
+    clean_track_name = re.sub(r'\s*-\s*song and lyrics.*$', '', track_name, flags=re.IGNORECASE)
+    clean_track_name = re.sub(r'\s*-\s*from.*$', '', clean_track_name, flags=re.IGNORECASE)
+    clean_artist_name = artist_name
+    
+    # Create multiple search queries in order of preference
+    search_queries = [
+        f"{clean_track_name} {clean_artist_name} official audio",
+        f"{clean_track_name} {clean_artist_name} audio",
+        f"{clean_artist_name} {clean_track_name} official",
+        f"{clean_track_name} {clean_artist_name}",
+    ]
     
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -42,16 +54,19 @@ def search_and_extract_audio(track_name, artist_name):
     }
     
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        try:
-            # Search for the track using YouTube
-            result = ydl.extract_info(search_query, download=False)
-            if result and 'entries' in result and result['entries']:
-                # Return the first entry
-                return result['entries'][0]
-        except Exception as e:
-            print(f"Error searching on YouTube: {e}", file=sys.stderr)
-            
-            # If YouTube fails, try other platforms
+        for query in search_queries:
+            try:
+                search_query = f"ytsearch1:{query}"
+                result = ydl.extract_info(search_query, download=False)
+                if result and 'entries' in result and result['entries']:
+                    # Return the first entry
+                    return result['entries'][0]
+            except Exception as e:
+                print(f"Error searching on YouTube with query '{query}': {e}", file=sys.stderr)
+                continue  # Try the next query
+        
+        # If YouTube search fails, try other platforms
+        for query in search_queries:
             try:
                 alternative_search = f"scsearch1:{query}"  # SoundCloud search
                 result = ydl.extract_info(alternative_search, download=False)
@@ -59,8 +74,10 @@ def search_and_extract_audio(track_name, artist_name):
                     # Return the first entry
                     return result['entries'][0]
             except Exception as e2:
-                print(f"Error searching on SoundCloud: {e2}", file=sys.stderr)
-                return None
+                print(f"Error searching on SoundCloud with query '{query}': {e2}", file=sys.stderr)
+                continue  # Try the next query
+        
+        return None
 
 def extract_spotify_url_info(url):
     """Extract audio info from a Spotify URL if supported by yt-dlp"""
