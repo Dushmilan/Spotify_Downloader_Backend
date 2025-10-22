@@ -17,6 +17,12 @@ class SpotifyService {
         throw new Error('Spotify URL is required');
       }
 
+      // Check if Python is available
+      const pythonAvailable = await PythonService.isPythonAvailable();
+      if (!pythonAvailable) {
+        throw new Error('Python is not available. Please install Python and add it to your PATH.');
+      }
+
       // Execute the Python metadata extractor script
       const result = await PythonService.executeScript(
         config.pythonScripts.metadataExtractor,

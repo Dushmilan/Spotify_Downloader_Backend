@@ -48,14 +48,28 @@ class PythonService {
             reject(new Error(`Failed to parse Python script output: ${parseError.message}`));
           }
         } else {
-          logger.error(`Python script failed with code ${code}: ${stderr}`);
-          reject(new Error(`Python script failed with code ${code}: ${stderr}`));
+          // Check if the error is related to Python not being found
+          if (stderr.toLowerCase().includes('python was not found') || 
+              stderr.toLowerCase().includes('python is not recognized') || 
+              stderr.toLowerCase().includes('command not found')) {
+            logger.error('Python executable not found. Please install Python and add it to your PATH.');
+            reject(new Error('Python executable not found. Please install Python and add it to your PATH.'));
+          } else {
+            logger.error(`Python script failed with code ${code}: ${stderr}`);
+            reject(new Error(`Python script failed with code ${code}: ${stderr}`));
+          }
         }
       });
 
       pythonProcess.on('error', (error) => {
-        logger.error(`Error spawning Python process: ${error.message}`);
-        reject(error);
+        // Handle the case where Python is not installed
+        if (error.code === 'ENOENT') {
+          logger.error('Python executable not found. Please install Python and add it to your PATH: ' + error.message);
+          reject(new Error('Python executable not found. Please install Python and add it to your PATH.'));
+        } else {
+          logger.error(`Error spawning Python process: ${error.message}`);
+          reject(error);
+        }
       });
     });
   }
@@ -68,6 +82,25 @@ class PythonService {
     // This is a simplified version - in a real implementation, you might want to 
     // search for Python in multiple locations
     return config.pythonPath;
+  }
+
+  /**
+   * Check if Python is available
+   * @returns {Promise<boolean>} - Promise that resolves with whether Python is available
+   */
+  static async isPythonAvailable() {
+    return new Promise((resolve) => {
+      const { spawn } = require('child_process');
+      const pythonProcess = spawn(config.pythonPath, ['--version']);
+      
+      pythonProcess.on('close', (code) => {
+        resolve(code === 0);
+      });
+      
+      pythonProcess.on('error', () => {
+        resolve(false);
+      });
+    });
   }
 }
 

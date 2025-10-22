@@ -19,6 +19,12 @@ class YouTubeService {
         throw new Error('Track title and artist are required');
       }
 
+      // Check if Python is available
+      const pythonAvailable = await PythonService.isPythonAvailable();
+      if (!pythonAvailable) {
+        throw new Error('Python is not available. Please install Python and add it to your PATH.');
+      }
+
       const downloadsDir = path.join(__dirname, '../../', config.downloadsDir);
       
       // Ensure downloads directory exists
@@ -63,6 +69,12 @@ class YouTubeService {
     try {
       if (!youtubeUrl) {
         throw new Error('YouTube URL is required');
+      }
+
+      // Check if Python is available
+      const pythonAvailable = await PythonService.isPythonAvailable();
+      if (!pythonAvailable) {
+        throw new Error('Python is not available. Please install Python and add it to your PATH.');
       }
 
       const downloadsDir = path.join(__dirname, '../../', config.downloadsDir);

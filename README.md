@@ -29,7 +29,7 @@ npm install
 
 3. Install Python packages:
 ```bash
-pip install yt-dlp
+pip install -r requirements.txt
 ```
 
 ## Running the Application
@@ -54,10 +54,22 @@ The server will run on `http://localhost:3000`
 
 1. User provides a Spotify track URL through the web interface
 2. The application extracts track metadata (title, artist, etc.) from Spotify
-3. Using the metadata, it searches for the track on YouTube
-4. Downloads the audio from the best matching YouTube video
+3. Using the metadata, it searches for the track on YouTube using an improved matching algorithm
+4. Downloads the audio from the best matching YouTube video using multiple fallback strategies
 5. Converts to MP3 format
 6. Makes the file available for download
+
+## Key Improvements
+
+This implementation includes several key improvements for robustness:
+
+1. **Enhanced YouTube Search**: Improved algorithm to find better matches between Spotify metadata and YouTube content, using similarity scoring and prioritizing official channels.
+
+2. **Better Error Handling**: Added comprehensive error handling on both Node.js and Python sides, including Python availability checks before attempting operations.
+
+3. **Improved Download Logic**: Multiple configuration fallbacks for yt-dlp to handle various YouTube restrictions and changes.
+
+4. **File Management**: Proper file naming and handling to ensure downloads complete successfully.
 
 ## Configuration
 
