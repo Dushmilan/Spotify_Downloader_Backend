@@ -32,8 +32,6 @@ npm install
 pip install yt-dlp
 ```
 
-4. Make sure you have the `spotify_scraper.py` file in the `spotify/` directory that contains the `SpotifyClient` class.
-
 ## Running the Application
 
 1. Start the server:
@@ -49,6 +47,8 @@ The server will run on `http://localhost:3000`
 
 - `POST /download-spotify` - Download a Spotify track by providing the Spotify URL
 - `POST /download-youtube` - Directly download a YouTube video/audio
+- `POST /validate-spotify` - Validate a Spotify URL
+- `POST /validate-youtube` - Validate a YouTube URL
 
 ## How it Works
 
@@ -59,6 +59,48 @@ The server will run on `http://localhost:3000`
 5. Converts to MP3 format
 6. Makes the file available for download
 
+## Configuration
+
+The application can be configured using environment variables in a `.env` file:
+
+```env
+PORT=3000
+PYTHON_PATH=python
+DOWNLOADS_DIR=./downloads
+LOG_LEVEL=info
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REDIRECT_URI=your_spotify_redirect_uri
+```
+
+## File Structure
+
+```
+Spotify_Downloader_Backend/
+├── src/                    # Source code
+│   ├── app.js              # Express app setup
+│   ├── config/             # Configuration files
+│   ├── controllers/        # Request controllers
+│   ├── services/           # Business logic services
+│   ├── middleware/         # Express middleware
+│   ├── routes/             # API routes
+│   └── utils/              # Utility functions
+├── python/                 # Python scripts
+│   ├── spotify/            # Spotify-related scripts
+│   │   ├── metadata_extractor.py
+│   │   └── spotify_client.py
+│   └── downloader/         # YouTube download scripts
+│       └── youtube_downloader.py
+├── public/                 # Static files
+│   └── index.html          # Web interface
+├── downloads/              # Downloaded files
+├── logs/                   # Log files
+├── tests/                  # Test files
+├── server.js               # Server entry point
+├── package.json            # Node.js dependencies
+└── .env                    # Environment variables
+```
+
 ## Troubleshooting
 
 If you get a "Python was not found" error:
@@ -67,17 +109,3 @@ If you get a "Python was not found" error:
 
 If you get a "ffmpeg not found" error:
 - Install FFmpeg and add it to your system PATH
-
-## File Structure
-
-```
-Spotify_Downloader_Backend/
-├── server.js          # Express server
-├── package.json       # Node.js dependencies
-├── public/
-│   └── index.html     # Web interface
-├── spotify/
-│   └── metadata_extractor.py  # Spotify metadata extraction
-└── yt-dlp/
-    └── downloader.py          # YouTube audio download
-```
