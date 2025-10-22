@@ -47,8 +47,37 @@ class SpotifyModel {
       pythonProcess.on('close', (code) => {
         if (code === 0) {
           try {
-            // Parse the JSON result from Python script
-            const metadata = JSON.parse(result.trim());
+            // Clean up the result string to extract only the JSON part
+            const cleanedResult = result.trim();
+            
+            // Find the first JSON object in the output by looking for '{' and matching brackets
+            const jsonStart = cleanedResult.indexOf('{');
+            if (jsonStart === -1) {
+              throw new Error('No JSON found in output');
+            }
+            
+            // Extract just the JSON object
+            let openBraces = 0;
+            let jsonEnd = -1;
+            for (let i = jsonStart; i < cleanedResult.length; i++) {
+              if (cleanedResult[i] === '{') {
+                openBraces++;
+              } else if (cleanedResult[i] === '}') {
+                openBraces--;
+                if (openBraces === 0) {
+                  jsonEnd = i;
+                  break;
+                }
+              }
+            }
+            
+            if (jsonEnd === -1) {
+              throw new Error('Invalid JSON structure');
+            }
+            
+            const jsonString = cleanedResult.substring(jsonStart, jsonEnd + 1);
+            const metadata = JSON.parse(jsonString);
+            
             if (metadata.error) {
               reject(new Error(metadata.error));
             } else {
@@ -56,7 +85,7 @@ class SpotifyModel {
             }
           } catch (parseError) {
             console.error('Error parsing metadata JSON:', result);
-            reject(new Error('Failed to parse metadata from Python script'));
+            reject(new Error('Failed to parse metadata from Python script: ' + parseError.message));
           }
         } else {
           console.error('Python script error:', error);
@@ -91,7 +120,37 @@ class SpotifyModel {
       pythonProcess.on('close', (code) => {
         if (code === 0) {
           try {
-            const audioInfo = JSON.parse(result.trim());
+            // Clean up the result string to extract only the JSON part
+            const cleanedResult = result.trim();
+            
+            // Find the first JSON object in the output by looking for '{' and matching brackets
+            const jsonStart = cleanedResult.indexOf('{');
+            if (jsonStart === -1) {
+              throw new Error('No JSON found in output');
+            }
+            
+            // Extract just the JSON object
+            let openBraces = 0;
+            let jsonEnd = -1;
+            for (let i = jsonStart; i < cleanedResult.length; i++) {
+              if (cleanedResult[i] === '{') {
+                openBraces++;
+              } else if (cleanedResult[i] === '}') {
+                openBraces--;
+                if (openBraces === 0) {
+                  jsonEnd = i;
+                  break;
+                }
+              }
+            }
+            
+            if (jsonEnd === -1) {
+              throw new Error('Invalid JSON structure');
+            }
+            
+            const jsonString = cleanedResult.substring(jsonStart, jsonEnd + 1);
+            const audioInfo = JSON.parse(jsonString);
+            
             if (audioInfo.success) {
               resolve({
                 success: true,
@@ -105,14 +164,14 @@ class SpotifyModel {
             } else {
               resolve({
                 success: false,
-                error: 'Could not find audio for the given track'
+                error: audioInfo.error || 'Could not find audio for the given track'
               });
             }
           } catch (parseError) {
             console.error('Error parsing audio info JSON:', result);
             resolve({
               success: false,
-              error: 'Failed to parse audio info from Python script'
+              error: 'Failed to parse audio info from Python script: ' + parseError.message
             });
           }
         } else {
@@ -147,7 +206,37 @@ class SpotifyModel {
       pythonProcess.on('close', (code) => {
         if (code === 0) {
           try {
-            const audioInfo = JSON.parse(result.trim());
+            // Clean up the result string to extract only the JSON part
+            const cleanedResult = result.trim();
+            
+            // Find the first JSON object in the output by looking for '{' and matching brackets
+            const jsonStart = cleanedResult.indexOf('{');
+            if (jsonStart === -1) {
+              throw new Error('No JSON found in output');
+            }
+            
+            // Extract just the JSON object
+            let openBraces = 0;
+            let jsonEnd = -1;
+            for (let i = jsonStart; i < cleanedResult.length; i++) {
+              if (cleanedResult[i] === '{') {
+                openBraces++;
+              } else if (cleanedResult[i] === '}') {
+                openBraces--;
+                if (openBraces === 0) {
+                  jsonEnd = i;
+                  break;
+                }
+              }
+            }
+            
+            if (jsonEnd === -1) {
+              throw new Error('Invalid JSON structure');
+            }
+            
+            const jsonString = cleanedResult.substring(jsonStart, jsonEnd + 1);
+            const audioInfo = JSON.parse(jsonString);
+            
             if (audioInfo.success) {
               resolve({
                 success: true,
@@ -161,14 +250,14 @@ class SpotifyModel {
             } else {
               resolve({
                 success: false,
-                error: 'Could not extract audio info from the given URL'
+                error: audioInfo.error || 'Could not extract audio info from the given URL'
               });
             }
           } catch (parseError) {
             console.error('Error parsing audio info JSON:', result);
             resolve({
               success: false,
-              error: 'Failed to parse audio info from Python script'
+              error: 'Failed to parse audio info from Python script: ' + parseError.message
             });
           }
         } else {

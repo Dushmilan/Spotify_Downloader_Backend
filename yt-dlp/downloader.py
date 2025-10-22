@@ -3,6 +3,7 @@ import os
 import time
 import json
 import re
+import sys
 
 def extract_audio_info(url):
     """Extract audio information without downloading"""
@@ -104,15 +105,114 @@ def extract_spotify_url_info(url):
             # Fallback to search approach if direct extraction doesn't work
             return None
 
+def download_audio(url, output_path):
+    """Download audio from the given URL to the specified output path using direct yt-dlp command"""
+    import subprocess
+    import os
+    import time
+    
+    # Ensure the downloads directory exists
+    downloads_dir = os.path.dirname(output_path)
+    if not os.path.exists(downloads_dir):
+        os.makedirs(downloads_dir, exist_ok=True)
+    
+    # Extract the base path without extension for use in yt-dlp
+    base_path = output_path.replace('.%(ext)s', '')
+    
+    # Multiple command approaches
+    commands = [
+        # Command 1: Basic audio extraction
+        [
+            'yt-dlp',
+            '-x', '--audio-format', 'mp3', '--audio-quality', '192k',
+            '--output', f'{base_path}.%(ext)s',
+            '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            url
+        ],
+        # Command 2: Different format selection
+        [
+            'yt-dlp',
+            '-f', 'bestaudio/best',
+            '-x', '--audio-format', 'mp3', '--audio-quality', '192k',
+            '--output', f'{base_path}.%(ext)s',
+            '--add-header', 'User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+            url
+        ],
+        # Command 3: With different headers and format
+        [
+            'yt-dlp',
+            '-f', 'best[height<=720]/best',
+            '-x', '--audio-format', 'mp3', '--audio-quality', '192k',
+            '--output', f'{base_path}.%(ext)s',
+            '--add-header', 'User-Agent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            url
+        ]
+    ]
+    
+    for i, cmd in enumerate(commands):
+        try:
+            print(f"Trying download command {i+1}...", file=sys.stderr)
+            
+            # Execute the yt-dlp command directly
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=120  # 2 minute timeout
+            )
+            
+            if result.returncode == 0:
+                print("Download completed successfully", file=sys.stderr)
+                
+                # Find the downloaded file with the correct extension
+                import glob
+                downloaded_files = glob.glob(f"{base_path}.*")
+                
+                # Look for the MP3 file
+                mp3_file = None
+                for file in downloaded_files:
+                    if file.lower().endswith('.mp3'):
+                        mp3_file = file
+                        break
+                
+                if mp3_file:
+                    print(f"Successfully downloaded: {mp3_file}", file=sys.stderr)
+                    return True
+                else:
+                    print(f"Download process completed but MP3 file not found in: {downloaded_files}", file=sys.stderr)
+                    return False
+            else:
+                print(f"Command {i+1} failed with return code {result.returncode}", file=sys.stderr)
+                print(f"Error output: {result.stderr}", file=sys.stderr)
+                
+        except subprocess.TimeoutExpired:
+            print(f"Command {i+1} timed out", file=sys.stderr)
+        except Exception as e:
+            print(f"Command {i+1} failed with exception: {e}", file=sys.stderr)
+        
+        # Wait before trying the next approach
+        if i < len(commands) - 1:
+            time.sleep(3)
+    
+    return False
+
 # Example usage
 if __name__ == "__main__":
     import sys
     
     if len(sys.argv) < 2:
-        print("Usage: python downloader.py <url_or_trackname> [artist_name]")
+        print("Usage: python downloader.py <url_or_trackname> [artist_name] or python downloader.py download <url> <output_path>")
         sys.exit(1)
     
-    if len(sys.argv) == 3:  # Search for track using metadata
+    if sys.argv[1] == 'download' and len(sys.argv) == 4:  # Download audio
+        _, cmd, url, output_path = sys.argv
+        success = download_audio(url, output_path)
+        if success:
+            print(json.dumps({'success': True, 'message': 'Download completed successfully'}))
+        else:
+            print(json.dumps({'success': False, 'error': 'Download failed'}), file=sys.stderr)
+            sys.exit(1)
+    elif len(sys.argv) == 3:  # Search for track using metadata
         track_name = sys.argv[1]
         artist_name = sys.argv[2]
         result = search_and_extract_audio(track_name, artist_name)

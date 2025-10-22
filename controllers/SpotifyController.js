@@ -17,6 +17,9 @@ class SpotifyController {
       const directAudioInfoResult = await this.model.getAudioInfoFromSpotifyUrl(spotifyUrl);
       
       if (directAudioInfoResult.success) {
+        // Create download URL for the frontend
+        const downloadUrl = `/download?url=${encodeURIComponent(directAudioInfoResult.audioUrl)}&title=${encodeURIComponent(directAudioInfoResult.title)}`;
+        
         res.json({ 
           success: true, 
           audioUrl: directAudioInfoResult.audioUrl,
@@ -24,6 +27,8 @@ class SpotifyController {
           webpageUrl: directAudioInfoResult.webpageUrl,
           duration: directAudioInfoResult.duration,
           uploader: directAudioInfoResult.uploader,
+          downloadUrl: downloadUrl,  // Add download URL to the response
+          streamUrl: directAudioInfoResult.audioUrl, // Also provide direct stream URL as fallback
           message: 'Audio info retrieved successfully from Spotify URL'
         });
         return;
@@ -42,6 +47,9 @@ class SpotifyController {
       const audioInfoResult = await this.model.getAudioInfoFromSpotifyMetadata(metadata);
       
       if (audioInfoResult.success) {
+        // Create download URL for the frontend
+        const downloadUrl = `/download?url=${encodeURIComponent(audioInfoResult.audioUrl)}&title=${encodeURIComponent(audioInfoResult.title)}`;
+        
         res.json({ 
           success: true, 
           metadata: metadata,
@@ -50,6 +58,8 @@ class SpotifyController {
           webpageUrl: audioInfoResult.webpageUrl,
           duration: audioInfoResult.duration,
           uploader: audioInfoResult.uploader,
+          downloadUrl: downloadUrl,  // Add download URL to the response
+          streamUrl: audioInfoResult.audioUrl, // Also provide direct stream URL as fallback
           message: 'Audio info retrieved successfully'
         });
       } else {

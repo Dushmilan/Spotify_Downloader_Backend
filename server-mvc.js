@@ -6,6 +6,7 @@ app.listen(port, () => {
   console.log(`MVC Server is running on http://localhost:${port}`);
   console.log('Routes:');
   console.log('  POST /download-spotify - Download a Spotify track');
+  console.log('  GET /download - Download audio file using URL parameter');
 });
 
 // Handle graceful shutdowns
