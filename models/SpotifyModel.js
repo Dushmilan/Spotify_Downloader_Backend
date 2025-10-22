@@ -269,6 +269,8 @@ class SpotifyModel {
       });
     });
   }
+  
+
 }
 
 module.exports = SpotifyModel;

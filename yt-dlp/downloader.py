@@ -31,11 +31,13 @@ def extract_audio_info(url):
 
 def search_and_extract_audio(track_name, artist_name):
     """Search for a track on alternative platforms and return audio info"""
-    # Clean up the track name and artist name to make better search queries
+    import urllib.request
+    import urllib.parse
     
+    # Clean up the track name and artist name to make better search queries
     # Remove extra text that might be in the metadata
-    clean_track_name = re.sub(r'\s*-\s*song and lyrics.*$', '', track_name, flags=re.IGNORECASE)
-    clean_track_name = re.sub(r'\s*-\s*from.*$', '', clean_track_name, flags=re.IGNORECASE)
+    clean_track_name = re.sub(r'\s*-\s*song and lyrics.*', '', track_name, flags=re.IGNORECASE)
+    clean_track_name = re.sub(r'\s*-\s*from.*', '', clean_track_name, flags=re.IGNORECASE)
     clean_artist_name = artist_name
     
     # Create multiple search queries in order of preference
@@ -46,6 +48,7 @@ def search_and_extract_audio(track_name, artist_name):
         f"{clean_track_name} {clean_artist_name}",
     ]
     
+    # First, try to find the video using YouTube with yt-dlp
     ydl_opts = {
         'format': 'bestaudio/best',
         'extract_flat': True,  # Only extract info, don't download
@@ -106,9 +109,7 @@ def extract_spotify_url_info(url):
             return None
 
 def download_audio(url, output_path):
-    """Download audio from the given URL to the specified output path using direct yt-dlp command"""
-    import subprocess
-    import os
+    """Download audio from the given URL to the specified output path using yt-dlp Python API"""
     import time
     
     # Ensure the downloads directory exists
@@ -116,84 +117,135 @@ def download_audio(url, output_path):
     if not os.path.exists(downloads_dir):
         os.makedirs(downloads_dir, exist_ok=True)
     
-    # Extract the base path without extension for use in yt-dlp
-    base_path = output_path.replace('.%(ext)s', '')
-    
-    # Multiple command approaches
-    commands = [
-        # Command 1: Basic audio extraction
-        [
-            'yt-dlp',
-            '-x', '--audio-format', 'mp3', '--audio-quality', '192k',
-            '--output', f'{base_path}.%(ext)s',
-            '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            url
-        ],
-        # Command 2: Different format selection
-        [
-            'yt-dlp',
-            '-f', 'bestaudio/best',
-            '-x', '--audio-format', 'mp3', '--audio-quality', '192k',
-            '--output', f'{base_path}.%(ext)s',
-            '--add-header', 'User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-            url
-        ],
-        # Command 3: With different headers and format
-        [
-            'yt-dlp',
-            '-f', 'best[height<=720]/best',
-            '-x', '--audio-format', 'mp3', '--audio-quality', '192k',
-            '--output', f'{base_path}.%(ext)s',
-            '--add-header', 'User-Agent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            url
-        ]
+    # Multiple configuration approaches with more advanced options for YouTube
+    configs = [
+        # Config 1: Basic setup with extractor args to bypass restrictions
+        {
+            'format': 'bestaudio/best',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+            'postprocessor_args': [
+                '-ar', '44100'
+            ],
+            'prefer_ffmpeg': True,
+            'audioquality': '0',
+            'extractaudio': True,
+            'audioformat': 'mp3',
+            'outtmpl': output_path,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9,en-GB;q=0.8,en-US;q=0.7',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Origin': 'https://www.youtube.com',
+                'Referer': 'https://www.youtube.com/',
+                'Connection': 'keep-alive',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'same-origin',
+            },
+            'sleep_interval_requests': 1,
+            'sleep_interval': 1,
+            'max_sleep_interval': 3,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'web'],
+                    'skip': ['dash', 'hls'],
+                }
+            },
+            'cookiefile': None,  # Could use cookies if available
+        },
+        # Config 2: Different approach with specific format
+        {
+            'format': 'bestaudio[ext=m4a]/bestaudio/best',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+            'postprocessor_args': [
+                '-ar', '44100'
+            ],
+            'prefer_ffmpeg': True,
+            'audioquality': '0',
+            'extractaudio': True,
+            'audioformat': 'mp3',
+            'outtmpl': output_path,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9,en-GB;q=0.8,en-US;q=0.7',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Origin': 'https://www.youtube.com',
+                'Referer': 'https://www.youtube.com/',
+                'Connection': 'keep-alive',
+            },
+            'sleep_interval_requests': 1,
+            'sleep_interval': 2,
+            'max_sleep_interval': 5,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['web'],
+                }
+            },
+        },
+        # Config 3: Yet another approach with different options
+        {
+            'format': 'best[height<=720][width<=1280]/best',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+            'postprocessor_args': [
+                '-ar', '44100'
+            ],
+            'prefer_ffmpeg': True,
+            'audioquality': '0',
+            'extractaudio': True,
+            'audioformat': 'mp3',
+            'outtmpl': output_path,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9,en-GB;q=0.8,en-US;q=0.7',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Origin': 'https://www.youtube.com',
+                'Referer': 'https://www.youtube.com/',
+                'Connection': 'keep-alive',
+            },
+            'sleep_interval_requests': 1,
+            'sleep_interval': 3,
+            'max_sleep_interval': 7,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android_creator', 'web_embedded'],
+                }
+            },
+        }
     ]
     
-    for i, cmd in enumerate(commands):
+    for i, config in enumerate(configs):
         try:
-            print(f"Trying download command {i+1}...", file=sys.stderr)
+            print(f"Trying download config {i+1}...", file=sys.stderr)
+            with yt_dlp.YoutubeDL(config) as ydl:
+                ydl.download([url])
             
-            # Execute the yt-dlp command directly
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=120  # 2 minute timeout
-            )
+            print("Download completed successfully", file=sys.stderr)
+            return True
             
-            if result.returncode == 0:
-                print("Download completed successfully", file=sys.stderr)
-                
-                # Find the downloaded file with the correct extension
-                import glob
-                downloaded_files = glob.glob(f"{base_path}.*")
-                
-                # Look for the MP3 file
-                mp3_file = None
-                for file in downloaded_files:
-                    if file.lower().endswith('.mp3'):
-                        mp3_file = file
-                        break
-                
-                if mp3_file:
-                    print(f"Successfully downloaded: {mp3_file}", file=sys.stderr)
-                    return True
-                else:
-                    print(f"Download process completed but MP3 file not found in: {downloaded_files}", file=sys.stderr)
-                    return False
-            else:
-                print(f"Command {i+1} failed with return code {result.returncode}", file=sys.stderr)
-                print(f"Error output: {result.stderr}", file=sys.stderr)
-                
-        except subprocess.TimeoutExpired:
-            print(f"Command {i+1} timed out", file=sys.stderr)
         except Exception as e:
-            print(f"Command {i+1} failed with exception: {e}", file=sys.stderr)
-        
-        # Wait before trying the next approach
-        if i < len(commands) - 1:
-            time.sleep(3)
+            print(f"Config {i+1} failed: {e}", file=sys.stderr)
+            
+            # Wait before trying the next approach
+            if i < len(configs) - 1:
+                time.sleep(3)
     
+    # If all configs failed, return False to indicate failure
+    print("All download configs failed", file=sys.stderr)
     return False
 
 # Example usage
