@@ -46,8 +46,8 @@ The server will run on `http://localhost:3000`
 ## API Endpoints
 
 - `POST /download-spotify` - Download a Spotify track by providing the Spotify URL
-- `POST /download-youtube` - Directly download a YouTube video/audio
 - `POST /validate-spotify` - Validate a Spotify URL
+- `POST /download-youtube` - Directly download a YouTube video/audio
 - `POST /validate-youtube` - Validate a YouTube URL
 
 ## How it Works
@@ -85,18 +85,16 @@ Spotify_Downloader_Backend/
 │   ├── middleware/         # Express middleware
 │   ├── routes/             # API routes
 │   └── utils/              # Utility functions
-├── python/                 # Python scripts
-│   ├── spotify/            # Spotify-related scripts
-│   │   ├── metadata_extractor.py
-│   │   └── spotify_client.py
-│   └── downloader/         # YouTube download scripts
-│       └── youtube_downloader.py
+├── spotify/                # Spotify-related Python scripts
+│   ├── metadata_extractor.py
+│   └── spotify_client.py
+├── yt-dlp/                 # YouTube download Python script
+│   └── downloader.py
 ├── public/                 # Static files
 │   └── index.html          # Web interface
 ├── downloads/              # Downloaded files
 ├── logs/                   # Log files
-├── tests/                  # Test files
-├── server.js               # Server entry point
+├── server-mvc.js           # Server entry point
 ├── package.json            # Node.js dependencies
 └── .env                    # Environment variables
 ```

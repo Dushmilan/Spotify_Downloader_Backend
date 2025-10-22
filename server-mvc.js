@@ -1,12 +1,14 @@
 // server-mvc.js - MVC Server Implementation
-const { app, port } = require('./app');
+const { app, port } = require('./src/app');
 
 // Start the server
 app.listen(port, () => {
   console.log(`MVC Server is running on http://localhost:${port}`);
   console.log('Routes:');
-  console.log('  POST /download-spotify - Download a Spotify track');
-  console.log('  GET /download - Download audio file using URL parameter');
+  console.log('  POST /download-spotify - Download a Spotify track by providing Spotify URL');
+  console.log('  POST /validate-spotify - Validate a Spotify URL');
+  console.log('  POST /download-youtube - Download audio directly from YouTube URL');
+  console.log('  POST /validate-youtube - Validate a YouTube URL');
 });
 
 // Handle graceful shutdowns

@@ -10,6 +10,7 @@ const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const validation = require('./middleware/validation');
 
 const app = express();
+const port = config.port;
 
 // Use middleware
 app.use(requestLogger); // Log requests
@@ -31,4 +32,4 @@ app.use(notFoundHandler);
 // Error handler
 app.use(errorHandler);
 
-module.exports = app;
+module.exports = { app, port };

@@ -4,8 +4,8 @@ module.exports = {
   downloadsDir: process.env.DOWNLOADS_DIR || './downloads',
   logLevel: process.env.LOG_LEVEL || 'info',
   pythonScripts: {
-    metadataExtractor: './python/spotify/metadata_extractor.py',
-    youtubeDownloader: './python/downloader/youtube_downloader.py'
+    metadataExtractor: './spotify/metadata_extractor.py',
+    youtubeDownloader: './yt-dlp/downloader.py'
   },
   spotify: {
     clientId: process.env.SPOTIFY_CLIENT_ID,
