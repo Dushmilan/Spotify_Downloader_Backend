@@ -12,17 +12,30 @@ class SpotifyController {
         return res.status(400).json({ error: 'Spotify URL is required' });
       }
 
-      // First, extract metadata from Spotify
-      console.log('Extracting metadata from Spotify URL...');
+      // First, try to download directly from Spotify URL
+      console.log('Attempting direct download from Spotify URL...');
+      const directDownloadResult = await this.model.downloadFromSpotifyUrl(spotifyUrl);
+      
+      if (directDownloadResult.success) {
+        res.json({ 
+          success: true, 
+          downloadPath: directDownloadResult.filePath,
+          message: 'Track downloaded successfully from Spotify URL'
+        });
+        return;
+      }
+      
+      // If direct download fails, extract metadata and search for the track on alternative platforms
+      console.log('Direct download failed, extracting metadata from Spotify URL...');
       const metadata = await this.model.extractSpotifyMetadata(spotifyUrl);
       
       if (!metadata) {
         return res.status(500).json({ error: 'Failed to extract Spotify metadata' });
       }
 
-      // Then, search and download from YouTube using the metadata
-      console.log('Searching and downloading from YouTube...');
-      const downloadResult = await this.model.downloadFromYouTube(metadata);
+      // Then, search and download from alternative platforms using the metadata
+      console.log('Searching and downloading from alternative platforms...');
+      const downloadResult = await this.model.downloadFromSpotifyMetadata(metadata);
       
       if (downloadResult.success) {
         res.json({ 
@@ -39,22 +52,7 @@ class SpotifyController {
       res.status(500).json({ error: error.message });
     }
   }
-
-  async downloadYouTube(req, res) {
-    const { youtubeUrl } = req.body;
-    
-    if (!youtubeUrl) {
-      return res.status(400).json({ error: 'YouTube URL is required' });
-    }
-
-    const result = await this.model.downloadFromYouTubeUrl(youtubeUrl);
-    
-    if (result.success) {
-      res.json({ success: true, message: result.message || 'Download completed' });
-    } else {
-      res.status(500).json({ error: result.error });
-    }
-  }
 }
+
 
 module.exports = SpotifyController;

@@ -66,8 +66,8 @@ class SpotifyModel {
     });
   }
 
-  // Download from YouTube using Python and yt-dlp
-  async downloadFromYouTube(metadata) {
+  // Download audio based on Spotify metadata using Python and yt-dlp
+  async downloadFromSpotifyMetadata(metadata) {
     return new Promise((resolve, reject) => {
       const { title, artist } = metadata;
       const downloadsDir = path.join(__dirname, '../downloads');
@@ -122,7 +122,8 @@ class SpotifyModel {
     });
   }
 
-  async downloadFromYouTubeUrl(youtubeUrl) {
+  // Download directly from a Spotify URL if yt-dlp supports it
+  async downloadFromSpotifyUrl(spotifyUrl) {
     return new Promise((resolve, reject) => {
       const downloadsDir = path.join(__dirname, '../downloads');
       if (!fs.existsSync(downloadsDir)) {
@@ -131,23 +132,43 @@ class SpotifyModel {
 
       const pythonProcess = spawn(this.PYTHON_PATH, [
         path.join(__dirname, '../yt-dlp', 'downloader.py'),
-        youtubeUrl,
+        spotifyUrl,
         downloadsDir
       ]);
 
+      let result = '';
+      let error = '';
+
       pythonProcess.stdout.on('data', (data) => {
-        console.log(data.toString());
+        result += data.toString();
       });
 
       pythonProcess.stderr.on('data', (data) => {
-        console.error(data.toString());
+        error += data.toString();
       });
 
       pythonProcess.on('close', (code) => {
         if (code === 0) {
-          resolve({ success: true, message: 'Download completed' });
+          // Find the downloaded file
+          const files = fs.readdirSync(downloadsDir);
+          const audioFile = files.find(file => file.endsWith('.mp3'));
+          
+          if (audioFile) {
+            resolve({
+              success: true,
+              filePath: path.join('/downloads', audioFile)
+            });
+          } else {
+            resolve({
+              success: false,
+              error: 'Audio file not found after download'
+            });
+          }
         } else {
-          resolve({ success: false, error: `Download failed with code ${code}` });
+          resolve({
+            success: false,
+            error: `Python script failed with code ${code}: ${error}`
+          });
         }
       });
     });

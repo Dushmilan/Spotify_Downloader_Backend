@@ -12,8 +12,4 @@ router.post('/download-spotify', (req, res) => {
   spotifyController.downloadSpotify(req, res);
 });
 
-router.post('/download-youtube', (req, res) => {
-  spotifyController.downloadYouTube(req, res);
-});
-
 module.exports = router;
