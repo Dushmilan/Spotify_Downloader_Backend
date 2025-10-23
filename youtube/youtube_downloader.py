@@ -4,52 +4,41 @@ import sys
 import json
 import yt_dlp
 
-# Path to cookies file (change if needed)
 COOKIES_FILE = "./Cookies/music.youtube.com_cookies.txt"
 
 def download_youtube_audio(youtube_url, output_path):
-    """
-    Downloads a YouTube URL as an MP3.
-    Args:
-      youtube_url (str): YouTube video URL
-      output_path (str): Directory or full file path (without extension) to save MP3
-    Returns:
-      (bool, str): success, error_message
-    """
     try:
-        # Determine output directory and base filename
         if os.path.isdir(output_path):
             output_dir = output_path
             base_name = "output_audio"
         else:
             output_dir = os.path.dirname(output_path) or "."
-            base_name = os.path.basename(output_path) or "output_audio"
+            base_name = os.path.splitext(os.path.basename(output_path))[0] or "output_audio"
 
         os.makedirs(output_dir, exist_ok=True)
-
         outtmpl = os.path.join(output_dir, base_name + ".%(ext)s")
 
         ydl_opts = {
-            "format": "bestaudio/best",
-            "outtmpl": outtmpl,
-            "cookiefile": COOKIES_FILE if os.path.exists(COOKIES_FILE) else None,
-            "noplaylist": True,
-            "quiet": False,
-            "no_warnings": True,
-            "postprocessors": [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                    "preferredquality": "192",
-                }
-            ],
-            # Ensure ffmpeg is used for conversion
-            "postprocessor_args": ["-ar", "44100"],
+    "format": "bestaudio[protocol!=m3u8_native][protocol!=m3u8][vcodec=none]/bestaudio/best",
+    "merge_output_format": "m4a",
+    "outtmpl": outtmpl,
+    "cookiefile": COOKIES_FILE if os.path.exists(COOKIES_FILE) else None,
+    "noplaylist": True,
+    "quiet": False,
+    "no_warnings": True,
+    "postprocessors": [
+        {
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "128",
         }
+    ],
+    "postprocessor_args": ["-ar", "44100"],
+}
 
-        # Remove cookiefile key if None to avoid yt-dlp complaining
-        if ydl_opts["cookiefile"] is None:
-            del ydl_opts["cookiefile"]
+
+        if ydl_opts.get("cookiefile") is None:
+            ydl_opts.pop("cookiefile")
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([youtube_url])

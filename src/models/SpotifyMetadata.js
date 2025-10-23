@@ -3,51 +3,70 @@ const path = require('path');
 const config = require('../utils/config');
 
 class SpotifyMetadata {
-  static extractMetadata(spotifyUrl) {
+  static  extractMetadata(spotifyUrl) {
     return new Promise((resolve, reject) => {
       // Execute the Python script to extract metadata
       const pythonScript = path.join(__dirname, '..', '..', 'spotify', 'spotify_metadata.py');
       
       const child = exec(`${config.pythonPath} "${pythonScript}" "${spotifyUrl}"`, (error, stdout, stderr) => {
+        console.log('Python script stdout:', stdout);  
+        console.log('Python script stderr:', stderr);  
+
         if (error) {
           console.error(`Error executing Python script: ${error.message}`);
-          reject(new Error('Failed to extract metadata'));
+          reject(new Error(`Failed to execute metadata script: ${error.message}`));
           return;
         }
 
         if (stderr) {
           console.error(`Python script stderr: ${stderr}`);
-          // If there are errors in stderr, try to parse them as JSON
           try {
             const errorResult = JSON.parse(stderr.trim());
-            reject(new Error(errorResult.error || 'Error occurred during metadata extraction'));
+            reject(new Error(errorResult.error || `Metadata script error: ${stderr}`));
             return;
           } catch (e) {
-            reject(new Error('Error occurred during metadata extraction'));
+            reject(new Error(`Non-JSON metadata script error: ${stderr}`));
             return;
           }
         }
 
         try {
-          // Process stdout to extract JSON - may contain extra content
           const output = stdout.trim();
-          
-          // Look for JSON in the output (in case of extra logging messages)
           let jsonStart = output.indexOf('{');
           let jsonEnd = output.lastIndexOf('}');
           
           if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd >= jsonStart) {
             const jsonString = output.substring(jsonStart, jsonEnd + 1);
             const result = JSON.parse(jsonString);
-            resolve(result);
+            //console.log(result)
+            if (!result.metadata.title || !result.metadata.artist) {
+              reject(new Error('Extracted metadata missing title or artist'));
+              return;
+            }
+
+            resolve({
+              TrackName: result.metadata.title,
+              ArtistName: result.metadata.artist,
+            });
           } else {
-            // If no JSON found in the expected format, try to parse the whole output
-            const result = JSON.parse(output);
-            resolve(result);
-          }
+            try {
+          const result = JSON.parse(output);
+              if (!result.metadata.title || !result.metadata.artist) {
+                reject(new Error('Extracted metadata missing title or artist'));
+                  return;
+        }
+              resolve({
+                TrackName: result.metadata.title,
+                ArtistName: result.metadata.artist,
+              });
+            } catch (e) {
+              reject(new Error(`Could not find valid JSON in metadata script output: ${output}`));
+              return;
+  }
+}
         } catch (parseError) {
           console.error(`Error parsing Python output: ${stdout}`);
-          reject(new Error('Failed to parse metadata'));
+          reject(new Error(`Failed to parse metadata: ${parseError.message}`));
         }
       });
     });
