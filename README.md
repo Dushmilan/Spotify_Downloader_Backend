@@ -149,7 +149,9 @@ Spotify_Metadata_API/
 │   └── utils/              # Utility functions and configurations
 │       └── config.js
 ├── spotify/                # Python scripts for metadata extraction
-│   └── spotify_metadata.py # Script that uses spotify-scraper
+│   ├── spotify_metadata.py # Script that uses spotify-scraper
+│   ├── youtube_search.py # Script that searches YouTube for tracks using yt-dlp
+│   └── combined_metadata.py # Script that combines Spotify metadata and YouTube URL
 ├── package.json            # Node.js dependencies and scripts
 ├── requirements.txt        # Python dependencies
 ├── README.md               # This documentation

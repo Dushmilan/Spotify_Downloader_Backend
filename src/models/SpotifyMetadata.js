@@ -6,7 +6,7 @@ class SpotifyMetadata {
   static extractMetadata(spotifyUrl) {
     return new Promise((resolve, reject) => {
       // Execute the Python script to extract metadata
-      const pythonScript = path.join(__dirname, '..', '..', 'spotify', 'spotify_metadata.py');
+      const pythonScript = path.join(__dirname, '..', '..', 'spotify', 'combined_metadata.py');
       
       const child = exec(`${config.pythonPath} "${pythonScript}" "${spotifyUrl}"`, (error, stdout, stderr) => {
         if (error) {
