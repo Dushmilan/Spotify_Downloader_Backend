@@ -8,11 +8,6 @@ class SpotifyController {
       return res.status(400).json({ error: 'Spotify URL is required' });
     }
 
-    // Validate Spotify URL format
-    if (!SpotifyMetadata.isValidSpotifyUrl(spotifyUrl)) {
-      return res.status(400).json({ error: 'Invalid Spotify URL format' });
-    }
-
     try {
       const result = await SpotifyMetadata.extractMetadata(spotifyUrl);
       res.json(result);
