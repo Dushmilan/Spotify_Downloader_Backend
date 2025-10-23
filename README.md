@@ -1,6 +1,6 @@
-# Spotify Track Downloader
+# Spotify Downloader Backend API
 
-A web application that extracts Spotify track metadata and downloads the audio from YouTube.
+A backend-only API that extracts Spotify track metadata and downloads the audio from YouTube.
 
 ## Prerequisites
 
@@ -34,14 +34,12 @@ pip install -r requirements.txt
 
 ## Running the Application
 
-1. Start the server:
+Start the server:
 ```bash
 npm start
 ```
 
 The server will run on `http://localhost:3000`
-
-2. Access the web interface at `http://localhost:3000`
 
 ## API Endpoints
 
@@ -52,12 +50,12 @@ The server will run on `http://localhost:3000`
 
 ## How it Works
 
-1. User provides a Spotify track URL through the web interface
+1. Client provides a Spotify track URL through the API
 2. The application extracts track metadata (title, artist, etc.) from Spotify
 3. Using the metadata, it searches for the track on YouTube using an improved matching algorithm
 4. Downloads the audio from the best matching YouTube video using multiple fallback strategies
 5. Converts to MP3 format
-6. Makes the file available for download
+6. Makes the file available in the downloads directory
 
 ## Key Improvements
 
@@ -110,8 +108,6 @@ Spotify_Downloader_Backend/
 │   └── spotify_client.py
 ├── yt-dlp/                 # YouTube download Python script
 │   └── downloader.py
-├── public/                 # Static files
-│   └── index.html          # Web interface
 ├── downloads/              # Downloaded files
 ├── logs/                   # Log files
 ├── server-mvc.js           # Server entry point

@@ -20,7 +20,6 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(validation.sanitizeInput); // Sanitize inputs
 
 // Serve static files
-app.use(express.static(path.join(__dirname, '../public'))); // Serve static files from public/
 app.use('/downloads', express.static(config.downloadsDir)); // Serve downloads
 
 // Routes
