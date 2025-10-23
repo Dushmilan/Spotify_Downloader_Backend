@@ -1,5 +1,4 @@
-const SpotifyController = require('./src/controllers/spotifyController');
-const YouTubeController = require('./src/controllers/youtubeController');
+const SpotifyController = require('../src/controllers/SpotifyController');
 
 // Test the services directly
 async function testServices() {
