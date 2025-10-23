@@ -6,6 +6,7 @@ const { validateSpotifyUrl } = require('../middleware/validation');
 // Endpoint to get Spotify track metadata
 router.post('/get-metadata', validateSpotifyUrl, SpotifyController.getMetadata);
 
+
 // Health check endpoint
 router.get('/', SpotifyController.healthCheck);
 
