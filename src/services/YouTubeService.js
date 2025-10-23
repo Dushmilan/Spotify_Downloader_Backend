@@ -42,20 +42,32 @@ class YouTubeService {
 
       logger.info(`YouTube search result: ${JSON.stringify(result)}`);
 
-      // Find the downloaded file
-      const files = fs.readdirSync(downloadsDir);
-      const audioFile = files.find(file => file.endsWith('.mp3'));
-
-      if (audioFile) {
-        logger.info(`Successfully downloaded audio file: ${audioFile}`);
+      // Check if the Python script returned a download path
+      if (result.download_path) {
+        // Extract just the filename from the full path
+        const fileName = path.basename(result.download_path);
+        logger.info(`Successfully downloaded audio file: ${fileName}`);
         return {
           success: true,
-          filePath: path.join(config.downloadsDir, audioFile),
-          fileName: audioFile
+          filePath: path.join(config.downloadsDir, fileName),
+          fileName: fileName
         };
       } else {
-        logger.warn(`No audio file found after YouTube download attempt for: "${metadata.title}" by "${metadata.artist}"`);
-        throw new Error('Audio file not found after download');
+        // Fallback: look for any MP3 file in downloads directory
+        const files = fs.readdirSync(downloadsDir);
+        const audioFile = files.find(file => file.endsWith('.mp3'));
+
+        if (audioFile) {
+          logger.info(`Successfully downloaded audio file: ${audioFile}`);
+          return {
+            success: true,
+            filePath: path.join(config.downloadsDir, audioFile),
+            fileName: audioFile
+          };
+        } else {
+          logger.warn(`No audio file found after YouTube download attempt for: "${metadata.title}" by "${metadata.artist}"`);
+          throw new Error('Audio file not found after download');
+        }
       }
     } catch (error) {
       logger.error(`Error downloading from YouTube: ${error.message}`);
@@ -95,19 +107,31 @@ class YouTubeService {
         [youtubeUrl, downloadsDir]
       );
 
-      // Find the downloaded file
-      const files = fs.readdirSync(downloadsDir);
-      const audioFile = files.filter(file => file.endsWith('.mp3')).pop(); // Get the most recent file
-
-      if (audioFile) {
-        logger.info(`Successfully downloaded audio file from URL: ${audioFile}`);
+      // Check if the Python script returned a download path
+      if (result.download_path) {
+        // Extract just the filename from the full path
+        const fileName = path.basename(result.download_path);
+        logger.info(`Successfully downloaded audio file from URL: ${fileName}`);
         return {
           success: true,
-          filePath: path.join(config.downloadsDir, audioFile),
-          fileName: audioFile
+          filePath: path.join(config.downloadsDir, fileName),
+          fileName: fileName
         };
       } else {
-        throw new Error('Audio file not found after download');
+        // Find the downloaded file
+        const files = fs.readdirSync(downloadsDir);
+        const audioFile = files.filter(file => file.endsWith('.mp3')).pop(); // Get the most recent file
+
+        if (audioFile) {
+          logger.info(`Successfully downloaded audio file from URL: ${audioFile}`);
+          return {
+            success: true,
+            filePath: path.join(config.downloadsDir, audioFile),
+            fileName: audioFile
+          };
+        } else {
+          throw new Error('Audio file not found after download');
+        }
       }
     } catch (error) {
       logger.error(`Error downloading from YouTube URL: ${error.message}`);

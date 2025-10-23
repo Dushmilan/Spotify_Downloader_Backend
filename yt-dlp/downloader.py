@@ -161,51 +161,46 @@ def extract_spotify_url_info(url):
             # Fallback to search approach if direct extraction doesn't work
             return None
 
-def download_audio(url, output_path):
+def download_audio(video_url, output_path):
     """Download audio from the given URL to the specified output path using yt-dlp Python API"""
+    import os
     import time
     
     # Validate inputs
-    if not url or not output_path:
-        print("URL and output path are required", file=sys.stderr)
+    if not video_url or not output_path:
+        print(json.dumps({'success': False, 'error': 'URL and output path are required'}), file=sys.stderr)
         return False
     
-    print(f"Starting download from URL: {url}", file=sys.stderr)  # Log the URL being downloaded
+    print(f"Starting download from URL: {video_url}", file=sys.stderr)  # Log the URL being downloaded
     
-    # Ensure the downloads directory exists
-    downloads_dir = os.path.dirname(output_path)
-    if not os.path.exists(downloads_dir):
-        os.makedirs(downloads_dir, exist_ok=True)
+    # Extract directory and filename
+    output_dir = os.path.dirname(output_path)
+    file_name = os.path.splitext(os.path.basename(output_path))[0]
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
     
     # Multiple configuration approaches with more advanced options for YouTube
     configs = [
-        # Config 1: Basic setup with extractor args to bypass restrictions
+        # Config 1: Standard setup with various options to bypass restrictions
         {
             'format': 'bestaudio/best',
+            'outtmpl': os.path.join(output_dir, f"{file_name}.%(ext)s"),
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'postprocessor_args': [
-                '-ar', '44100'
-            ],
-            'prefer_ffmpeg': True,
-            'audioquality': '0',
-            'extractaudio': True,
-            'audioformat': 'mp3',
-            'outtmpl': output_path + '.%(ext)s',
+            'addmetadata': True,
+            'writethumbnail': False,
+            'quiet': False,
+            'nocheckcertificate': True,
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.9,en-GB;q=0.8,en-US;q=0.7',
                 'Accept-Encoding': 'gzip, deflate, br',
-                'Origin': 'https://www.youtube.com',
                 'Referer': 'https://www.youtube.com/',
-                'Connection': 'keep-alive',
-                'Sec-Fetch-Dest': 'empty',
-                'Sec-Fetch-Mode': 'cors',
-                'Sec-Fetch-Site': 'same-origin',
             },
             'sleep_interval_requests': 1,
             'sleep_interval': 1,
@@ -216,32 +211,26 @@ def download_audio(url, output_path):
                     'skip': ['dash', 'hls'],
                 }
             },
-            'cookiefile': None,  # Could use cookies if available
         },
-        # Config 2: Different approach with specific format
+        # Config 2: Alternative setup with different headers
         {
             'format': 'bestaudio[ext=m4a]/bestaudio/best',
+            'outtmpl': os.path.join(output_dir, f"{file_name}.%(ext)s"),
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'postprocessor_args': [
-                '-ar', '44100'
-            ],
-            'prefer_ffmpeg': True,
-            'audioquality': '0',
-            'extractaudio': True,
-            'audioformat': 'mp3',
-            'outtmpl': output_path + '.%(ext)s',
+            'addmetadata': True,
+            'writethumbnail': False,
+            'quiet': False,
+            'nocheckcertificate': True,
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.9,en-GB;q=0.8,en-US;q=0.7',
                 'Accept-Encoding': 'gzip, deflate, br',
-                'Origin': 'https://www.youtube.com',
                 'Referer': 'https://www.youtube.com/',
-                'Connection': 'keep-alive',
             },
             'sleep_interval_requests': 1,
             'sleep_interval': 2,
@@ -252,37 +241,32 @@ def download_audio(url, output_path):
                 }
             },
         },
-        # Config 3: Yet another approach with different options
+        # Config 3: Another approach that might work
         {
-            'format': 'best[height<=720][width<=1280]/best',
+            'format': 'bestaudio/best',
+            'outtmpl': os.path.join(output_dir, f"{file_name}.%(ext)s"),
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'postprocessor_args': [
-                '-ar', '44100'
-            ],
-            'prefer_ffmpeg': True,
-            'audioquality': '0',
-            'extractaudio': True,
-            'audioformat': 'mp3',
-            'outtmpl': output_path + '.%(ext)s',
+            'addmetadata': True,
+            'writethumbnail': False,
+            'quiet': False,
+            'nocheckcertificate': True,
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.9,en-GB;q=0.8,en-US;q=0.7',
                 'Accept-Encoding': 'gzip, deflate, br',
-                'Origin': 'https://www.youtube.com',
                 'Referer': 'https://www.youtube.com/',
-                'Connection': 'keep-alive',
             },
-            'sleep_interval_requests': 1,
+            'sleep_interval_requests': 2,
             'sleep_interval': 3,
             'max_sleep_interval': 7,
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android_creator', 'web_embedded'],
+                    'skip': ['hls'],
                 }
             },
         }
@@ -292,30 +276,25 @@ def download_audio(url, output_path):
         try:
             print(f"Trying download config {i+1}...", file=sys.stderr)
             with yt_dlp.YoutubeDL(config) as ydl:
-                ydl.download([url])
+                ydl.download([video_url])
             
-            print("Download completed successfully", file=sys.stderr)
-            # Check if the file was actually created and rename it to .mp3
-            import glob
-            # Look for the downloaded file with any extension
-            possible_files = glob.glob(output_path + '.*')
-            if possible_files:
-                downloaded_file = possible_files[0]
-                # Rename to have .mp3 extension
-                final_path = output_path + '.mp3'
-                os.rename(downloaded_file, final_path)
-                print(f"Renamed {downloaded_file} to {final_path}", file=sys.stderr)
-            return True
-            
+            # Check if the file was created with .mp3 extension
+            final_path = os.path.join(output_dir, f"{file_name}.mp3")
+            if os.path.exists(final_path):
+                print(json.dumps({'success': True, 'message': 'Download completed successfully', 'file_path': final_path}), file=sys.stderr)
+                return True
+            else:
+                print(json.dumps({'success': False, 'error': 'Download completed but file not found'}), file=sys.stderr)
+                return False
         except Exception as e:
-            print(f"Config {i+1} failed: {e}", file=sys.stderr)
+            print(f"Config {i+1} failed: {str(e)}", file=sys.stderr)
             
             # Wait before trying the next approach
             if i < len(configs) - 1:
                 time.sleep(3)
     
     # If all configs failed, return False to indicate failure
-    print("All download configs failed", file=sys.stderr)
+    print(json.dumps({'success': False, 'error': 'All download configs failed'}), file=sys.stderr)
     return False
 
 # Example usage
@@ -323,7 +302,7 @@ if __name__ == "__main__":
     import sys
     
     if len(sys.argv) < 2:
-        print(json.dumps({'success': False, 'error': 'Usage: python downloader.py <url_or_trackname> [artist_name] or python downloader.py download <url> <output_path>'}), file=sys.stderr)
+        print(json.dumps({'success': False, 'error': 'Usage: python downloader.py <url_or_trackname> [artist_name] [output_path] or python downloader.py download <url> <output_path>'}), file=sys.stderr)
         sys.exit(1)
     
     try:
@@ -332,17 +311,13 @@ if __name__ == "__main__":
         
         if sys.argv[1] == 'download' and len(sys.argv) >= 3:
             # The download command expects: script.py download url output_path
-            # Find where the URL ends and output path begins
-            # Since output_path is typically a path, we can look for that
-            for i in range(2, len(sys.argv)):
-                arg = sys.argv[i]
-                if arg.startswith('/') or arg.startswith('./') or ':' in arg or 'C:' in arg or 'D:' in arg:
-                    # This looks like a file path - reconstruct the URL from args 2 to i-1
-                    url = ' '.join(sys.argv[2:i])
-                    output_path = ' '.join(sys.argv[i:])
-                    break
+            # Handle arguments with spaces properly - the last argument is the output path
+            if len(sys.argv) >= 4:
+                # Assume everything between 'download' and the last argument is the URL
+                url = ' '.join(sys.argv[2:-1])
+                output_path = sys.argv[-1]
             else:
-                # If no path found, assume the last arg is the output path
+                # Fallback: just the URL and output path (no spaces)
                 url = sys.argv[2]
                 output_path = sys.argv[3] if len(sys.argv) > 3 else sys.argv[2]
             
@@ -354,9 +329,7 @@ if __name__ == "__main__":
                 sys.exit(1)
         elif len(sys.argv) >= 3:  # Search for track using metadata
             # Arguments might have been split due to spaces in track names
-            # The last argument is most likely to be the path (if any), so let's assume the last argument is the path
-            # and work backward to reconstruct track name and artist
-            
+            # Try to identify if the last argument is a path (downloads directory)
             args = sys.argv[1:]  # Skip script name
             
             # Check if the last argument looks like a path
@@ -366,35 +339,95 @@ if __name__ == "__main__":
                 downloads_dir = args[-1]
                 remaining_args = args[:-1]
                 
-                # For "track_name artist_name" pattern, we could try different splits
-                # but for now, let's just join the remaining args as the track name and use a default artist
-                # Actually, for metadata search, we expect exactly track_name and artist_name
+                # For "track_name artist_name" pattern, reconstruct properly
                 if len(remaining_args) >= 2:
-                    track_name = remaining_args[0]
-                    artist_name = remaining_args[1]
+                    # Join all but the last remaining argument as track name, last as artist
+                    # But for arguments with spaces, we need to be smarter
+                    # Simple approach: first half as track name, second half as artist
+                    mid_point = len(remaining_args) // 2
+                    track_name = ' '.join(remaining_args[:mid_point]) if mid_point > 0 else remaining_args[0]
+                    artist_name = ' '.join(remaining_args[mid_point:]) if mid_point < len(remaining_args) else "Unknown"
                 else:
                     track_name = remaining_args[0] if remaining_args else "Unknown"
                     artist_name = "Unknown"
             else:
-                # Just title and artist (or malformed)
-                if len(args) >= 2:
-                    track_name = args[0]  # First part
-                    artist_name = args[1]  # Second part
-                    # If there are more parts due to spaces, we need to reconstruct
-                    if len(args) > 2:
-                        # Assume everything after the first space belongs to the track name
-                        # Actually, let's try multiple approaches to determine the split
-                        track_name = args[0]
-                        artist_name = args[1]
-                        # If there are more arguments, we need to figure out whether they belong to track name or artist name
-                        # For now, a simple approach - last of the extra arguments is artist, rest join to track name
-                        if len(args) > 2:
-                            # For a more sophisticated approach, we could try to detect where the artist name starts
-                            # But for now, joining remaining arguments to artist_name as a simple solution
-                            artist_name = ' '.join(args[1:])
+                # Check if we have exactly 2 args where the second arg looks like a path (URL download case)
+                if len(args) == 2 and (args[1].startswith('/') or args[1].startswith('./') or ':' in args[1] or 'C:' in args[1] or 'D:' in args[1]):
+                    # This is a direct URL download: first arg is URL, second is output directory
+                    url = args[0]
+                    output_dir = args[1]
+                    
+                    # Validate URL - check if it's a YouTube URL
+                    if 'youtube.com' in url or 'youtu.be' in url:
+                        # Generate final output filename from the output path directory and a clean filename
+                        import re
+                        # Extract a clean filename from the URL or create a generic one
+                        # Use the video ID as the filename
+                        import urllib.parse
+                        parsed = urllib.parse.urlparse(url)
+                        video_id = urllib.parse.parse_qs(parsed.query).get('v', [None])[0]
+                        if not video_id:
+                            # If we can't get the video ID from the URL, create a generic name
+                            clean_filename = f"youtube_video_{int(time.time())}"
+                        else:
+                            clean_filename = video_id
+                        
+                        final_output_path = os.path.join(output_dir, clean_filename)
+                        
+                        print(f"Direct URL download from: {url} to path: {final_output_path}", file=sys.stderr)
+                        
+                        # Attempt to download the audio
+                        download_success = download_audio(url, final_output_path)
+                        
+                        if download_success:
+                            print(json.dumps({
+                                'success': True,
+                                'download_path': final_output_path + '.mp3',
+                                'url': url
+                            }))
+                            sys.exit(0)  # Exit successfully
+                        else:
+                            print(json.dumps({'success': False, 'error': 'Download failed'}), file=sys.stderr)
+                            sys.exit(1)
+                    else:
+                        # Not a YouTube URL, treat as track name and artist (fallback)
+                        track_name = args[0] if args[0] else "Unknown"
+                        artist_name = args[1] if args[1] else "Unknown"
                 else:
-                    track_name = args[0] if args else "Unknown"
-                    artist_name = "Unknown"
+                    # Just title and artist (possibly with spaces)
+                    if len(args) >= 2:
+                        # Smart reconstruction - look for keywords that typically separate title and artist
+                        combined_args = ' '.join(args)
+                        
+                        # Common separators between title and artist
+                        separators = [' by ', ' - ', ' · ']  # Including the special character from Spotify
+                        
+                        track_name = args[0]  # Default first part as track name
+                        artist_name = args[1]  # Default second part as artist name
+                        
+                        # Try to find better separation
+                        for sep in separators:
+                            if sep in combined_args:
+                                parts = combined_args.split(sep, 1)  # Split only on first occurrence
+                                if len(parts) == 2:
+                                    track_name = parts[0].strip()
+                                    artist_name = parts[1].strip()
+                                    break
+                                elif len(parts) > 2:
+                                    # Multiple occurrences, use first as track, rest as artist
+                                    track_name = parts[0].strip()
+                                    artist_name = sep.join(parts[1:]).strip()
+                                    break
+                        
+                        # If still default, try to reconstruct more intelligently
+                        if track_name == args[0] and artist_name == args[1] and len(args) > 2:
+                            # More than 2 arguments, need to reconstruct
+                            # Simple heuristic: last argument is artist, rest is track name
+                            artist_name = args[-1]
+                            track_name = ' '.join(args[:-1])
+                    else:
+                        track_name = args[0] if args else "Unknown"
+                        artist_name = "Unknown"
             
             # Validate inputs
             if not track_name or not artist_name:
@@ -404,15 +437,37 @@ if __name__ == "__main__":
             result = search_and_extract_audio(track_name, artist_name)
             
             if result:
-                print(json.dumps({
-                    'success': True,
-                    'title': result.get('title', ''),
-                    'url': result.get('url', ''),
-                    'duration': result.get('duration'),
-                    'uploader': result.get('uploader', ''),
-                    'webpage_url': result.get('webpage_url', ''),
-                    'formats': result.get('formats', [])
-                }))
+                # If successful in finding the audio, now download it
+                video_url = result.get('webpage_url', result.get('url', ''))
+                if not video_url:
+                    print(json.dumps({'success': False, 'error': 'Could not get video URL'}), file=sys.stderr)
+                    sys.exit(1)
+                
+                # Generate output filename from the track name
+                import re
+                clean_filename = re.sub(r'[<>:"/\\|?*]', '_', f"{artist_name} - {track_name}")
+                output_path = os.path.join(downloads_dir, clean_filename)
+                
+                print(f"Downloading from URL: {video_url} to path: {output_path}", file=sys.stderr)
+                
+                # Attempt to download the audio
+                download_success = download_audio(video_url, output_path)
+                
+                if download_success:
+                    # Return success result including the download path
+                    print(json.dumps({
+                        'success': True,
+                        'title': result.get('title', ''),
+                        'url': result.get('url', ''),
+                        'duration': result.get('duration'),
+                        'uploader': result.get('uploader', ''),
+                        'webpage_url': result.get('webpage_url', ''),
+                        'formats': result.get('formats', []),
+                        'download_path': output_path + '.mp3'
+                    }))
+                else:
+                    print(json.dumps({'success': False, 'error': 'Download failed'}), file=sys.stderr)
+                    sys.exit(1)
             else:
                 print(json.dumps({'success': False, 'error': 'Could not find audio'}), file=sys.stderr)
                 sys.exit(1)
