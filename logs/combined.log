@@ -263,3 +263,40 @@
 {"level":"error","message":"Error downloading from YouTube: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:12:40.701Z"}
 {"level":"error","message":"Error in downloadSpotify controller: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:12:40.701Z"}
 {"contentLength":"63","ip":"::1","level":"info","message":"POST /download-spotify?spotifyUrl=https://open.spotify.com/track/1KEs3f4ohpWCh1FDNDsm3M?si=bbd91b979dd24cda - 500 - 2834ms","service":"spotify-downloader","timestamp":"2025-10-22T18:12:40.702Z","userAgent":"PostmanRuntime/7.49.0"}
+{"level":"info","message":"Processing Spotify download request for URL: https://open.spotify.com/track/1JDZ0c0OzuyJjSwENJQg4n?si=85f489b70c0649f7","service":"spotify-downloader","timestamp":"2025-10-22T18:16:32.334Z"}
+{"level":"info","message":"Extracting metadata from Spotify...","service":"spotify-downloader","timestamp":"2025-10-22T18:16:32.336Z"}
+{"level":"info","message":"Extracting metadata from Spotify URL: https://open.spotify.com/track/1JDZ0c0OzuyJjSwENJQg4n?si=85f489b70c0649f7","service":"spotify-downloader","timestamp":"2025-10-22T18:16:32.336Z"}
+{"level":"info","message":"Executing Python script: ./spotify/metadata_extractor.py with args: https://open.spotify.com/track/1JDZ0c0OzuyJjSwENJQg4n?si=85f489b70c0649f7","service":"spotify-downloader","timestamp":"2025-10-22T18:16:32.368Z"}
+{"level":"info","message":"Python script executed successfully","service":"spotify-downloader","timestamp":"2025-10-22T18:16:33.444Z"}
+{"level":"info","message":"Successfully extracted Spotify metadata","service":"spotify-downloader","timestamp":"2025-10-22T18:16:33.445Z"}
+{"level":"info","message":"Downloading from YouTube...","service":"spotify-downloader","timestamp":"2025-10-22T18:16:33.445Z"}
+{"level":"info","message":"Downloading from YouTube for track: Entha Muddagiddeeye by Sagar","service":"spotify-downloader","timestamp":"2025-10-22T18:16:33.445Z"}
+{"level":"info","message":"Searching YouTube for: \"Entha Muddagiddeeye\" by \"Sagar\"","service":"spotify-downloader","timestamp":"2025-10-22T18:16:33.472Z"}
+{"level":"info","message":"Executing Python script: ./yt-dlp/downloader.py with args: Entha Muddagiddeeye Sagar C:\\Users\\LENOVO\\Desktop\\Spotify_Downloader_Backend\\downloads","service":"spotify-downloader","timestamp":"2025-10-22T18:16:33.472Z"}
+{"level":"info","message":"Python script executed successfully","service":"spotify-downloader","timestamp":"2025-10-22T18:16:35.467Z"}
+{"level":"info","message":"YouTube search result: {\"success\":true,\"title\":\"#Entha #Muddagiddiye #Rangasthala #Kannada 2019 new Movie Cover song in OMR VIDEOS\",\"url\":\"https://www.youtube.com/watch?v=kMTowuUnBoU\",\"duration\":169,\"uploader\":\"OMR VIDEOS\",\"webpage_url\":\"\",\"formats\":[]}","service":"spotify-downloader","timestamp":"2025-10-22T18:16:35.467Z"}
+{"level":"warn","message":"No audio file found after YouTube download attempt for: \"Entha Muddagiddeeye\" by \"Sagar\"","service":"spotify-downloader","timestamp":"2025-10-22T18:16:35.468Z"}
+{"level":"error","message":"Error downloading from YouTube: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:16:35.468Z"}
+{"level":"error","message":"Error in downloadSpotify controller: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:16:35.468Z"}
+{"contentLength":"63","ip":"::1","level":"info","message":"POST /download-spotify?spotifyUrl=https://open.spotify.com/track/1KEs3f4ohpWCh1FDNDsm3M?si=bbd91b979dd24cda - 500 - 3146ms","service":"spotify-downloader","timestamp":"2025-10-22T18:16:35.471Z","userAgent":"PostmanRuntime/7.49.0"}
+{"ip":"::1","level":"error","message":"Error occurred: Cannot read properties of undefined (reading 'spotifyUrl')","method":"POST","service":"spotify-downloader","timestamp":"2025-10-22T18:16:59.765Z","url":"/download-spotify","userAgent":"curl/8.14.1"}
+{"contentLength":"1340","ip":"::1","level":"info","message":"POST /download-spotify - 500 - 2ms","service":"spotify-downloader","timestamp":"2025-10-22T18:16:59.766Z","userAgent":"curl/8.14.1"}
+{"ip":"::1","level":"error","message":"Error occurred: Cannot read properties of undefined (reading 'spotifyUrl')","method":"POST","service":"spotify-downloader","timestamp":"2025-10-22T18:17:12.985Z","url":"/download-spotify","userAgent":"curl/8.14.1"}
+{"contentLength":"1340","ip":"::1","level":"info","message":"POST /download-spotify - 500 - 1ms","service":"spotify-downloader","timestamp":"2025-10-22T18:17:12.986Z","userAgent":"curl/8.14.1"}
+{"contentLength":"71","ip":"::1","level":"info","message":"POST /download-spotify - 400 - 2ms","service":"spotify-downloader","timestamp":"2025-10-22T18:18:25.450Z","userAgent":"curl/8.14.1"}
+{"level":"info","message":"Processing Spotify download request for URL: https://open.spotify.com/track/1KEs3f4ohpWCh1FDNDsm3M?si=c84c4009f0914222","service":"spotify-downloader","timestamp":"2025-10-22T18:18:54.954Z"}
+{"level":"info","message":"Extracting metadata from Spotify...","service":"spotify-downloader","timestamp":"2025-10-22T18:18:54.954Z"}
+{"level":"info","message":"Extracting metadata from Spotify URL: https://open.spotify.com/track/1KEs3f4ohpWCh1FDNDsm3M?si=c84c4009f0914222","service":"spotify-downloader","timestamp":"2025-10-22T18:18:54.954Z"}
+{"level":"info","message":"Executing Python script: ./spotify/metadata_extractor.py with args: https://open.spotify.com/track/1KEs3f4ohpWCh1FDNDsm3M?si=c84c4009f0914222","service":"spotify-downloader","timestamp":"2025-10-22T18:18:54.978Z"}
+{"level":"info","message":"Python script executed successfully","service":"spotify-downloader","timestamp":"2025-10-22T18:18:56.020Z"}
+{"level":"info","message":"Successfully extracted Spotify metadata","service":"spotify-downloader","timestamp":"2025-10-22T18:18:56.021Z"}
+{"level":"info","message":"Downloading from YouTube...","service":"spotify-downloader","timestamp":"2025-10-22T18:18:56.021Z"}
+{"level":"info","message":"Downloading from YouTube for track: Maari Gethu by Yuvan Shankar Raja","service":"spotify-downloader","timestamp":"2025-10-22T18:18:56.022Z"}
+{"level":"info","message":"Searching YouTube for: \"Maari Gethu\" by \"Yuvan Shankar Raja\"","service":"spotify-downloader","timestamp":"2025-10-22T18:18:56.047Z"}
+{"level":"info","message":"Executing Python script: ./yt-dlp/downloader.py with args: Maari Gethu Yuvan Shankar Raja C:\\Users\\LENOVO\\Desktop\\Spotify_Downloader_Backend\\downloads","service":"spotify-downloader","timestamp":"2025-10-22T18:18:56.048Z"}
+{"level":"info","message":"Python script executed successfully","service":"spotify-downloader","timestamp":"2025-10-22T18:18:57.906Z"}
+{"level":"info","message":"YouTube search result: {\"success\":true,\"title\":\"Maari Gethu\",\"url\":\"https://www.youtube.com/watch?v=SulFmhz2URA\",\"duration\":227,\"uploader\":\"Yuvan Shankar Raja - Topic\",\"webpage_url\":\"\",\"formats\":[]}","service":"spotify-downloader","timestamp":"2025-10-22T18:18:57.906Z"}
+{"level":"warn","message":"No audio file found after YouTube download attempt for: \"Maari Gethu\" by \"Yuvan Shankar Raja\"","service":"spotify-downloader","timestamp":"2025-10-22T18:18:57.908Z"}
+{"level":"error","message":"Error downloading from YouTube: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:18:57.908Z"}
+{"level":"error","message":"Error in downloadSpotify controller: Audio file not found after download","service":"spotify-downloader","timestamp":"2025-10-22T18:18:57.908Z"}
+{"contentLength":"63","ip":"::1","level":"info","message":"POST /download-spotify - 500 - 2957ms","service":"spotify-downloader","timestamp":"2025-10-22T18:18:57.910Z","userAgent":"PostmanRuntime/7.49.0"}
