@@ -27,20 +27,35 @@ app.post('/get-metadata', (req, res) => {
     }
 
     if (stderr) {
+      console.error(`Python script stderr: ${stderr}`);
       // If there are errors in stderr, try to parse them as JSON
       try {
-        const errorResult = JSON.parse(stderr);
+        const errorResult = JSON.parse(stderr.trim());
         return res.status(500).json(errorResult);
       } catch (e) {
-        console.error(`Python script stderr: ${stderr}`);
         return res.status(500).json({ error: 'Error occurred during metadata extraction', details: stderr });
       }
     }
 
     try {
-      const result = JSON.parse(stdout);
-      res.json(result);
+      // Process stdout to extract JSON - may contain extra content
+      const output = stdout.trim();
+      
+      // Look for JSON in the output (in case of extra logging messages)
+      let jsonStart = output.indexOf('{');
+      let jsonEnd = output.lastIndexOf('}');
+      
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd >= jsonStart) {
+        const jsonString = output.substring(jsonStart, jsonEnd + 1);
+        const result = JSON.parse(jsonString);
+        res.json(result);
+      } else {
+        // If no JSON found in the expected format, try to parse the whole output
+        const result = JSON.parse(output);
+        res.json(result);
+      }
     } catch (parseError) {
+      console.error(`Error parsing Python output: ${stdout}`);
       res.status(500).json({ error: 'Failed to parse metadata', details: parseError.message });
     }
   });
