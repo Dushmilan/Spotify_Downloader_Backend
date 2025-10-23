@@ -62,6 +62,42 @@ class SpotifyMetadata {
       return false;
     }
   }
+
+  static fetchYoutubeUrl(TrackName, ArtistName) {
+    return new Promise((resolve, reject) => {
+      const pythonScript = path.join(__dirname, '..', '..', 'spotify', 'fetch_youtube_url.py');
+      
+      const child = exec(`${config.pythonPath} "${pythonScript}" "${TrackName}" "${ArtistName}"`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error executing Python script: ${error.message}`);
+          reject(new Error('Failed to fetch YouTube URL'));
+          return;
+        }
+
+        if (stderr) {
+          console.error(`Python script stderr: ${stderr}`);
+          // If there are errors in stderr, try to parse them as JSON
+          try {
+            const errorResult = JSON.parse(stderr.trim());
+            reject(new Error(errorResult.error || 'Error occurred during YouTube URL fetching'));
+            return;
+          } catch (e) {
+            reject(new Error('Error occurred during YouTube URL fetching'));
+            return;
+          }
+        }
+
+        try {
+          const output = stdout.trim();
+          const result = JSON.parse(output);
+          resolve(result.youtube_url);
+        } catch (parseError) {
+          console.error(`Error parsing Python output: ${stdout}`);
+          reject(new Error('Failed to parse YouTube URL'));
+        }
+      });
+    });
+  }
 }
 
 module.exports = SpotifyMetadata;
