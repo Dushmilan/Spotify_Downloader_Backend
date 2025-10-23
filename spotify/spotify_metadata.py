@@ -5,6 +5,10 @@ from urllib.parse import urlparse, parse_qs
 
 try:
     # Try to use spotify_scraper if available
+    import logging
+    # Suppress external package's logging to prevent stdout pollution
+    logging.getLogger("spotify_scraper").setLevel(logging.CRITICAL)
+    logging.getLogger().setLevel(logging.CRITICAL)  # Set root logger to critical
     from spotify_scraper import SpotifyClient
 
     def extract_metadata(spotify_url):
