@@ -4,6 +4,12 @@ import re
 from urllib.parse import urlparse, parse_qs
 
 try:
+    import yt_dlp
+    YTDLP_AVAILABLE = True
+except ImportError:
+    YTDLP_AVAILABLE = False
+
+try:
     # Try to use spotify_scraper if available
     import logging
     # Suppress external package's logging to prevent stdout pollution

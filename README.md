@@ -1,6 +1,6 @@
 # Spotify Metadata API
 
-A simple API that extracts Spotify track metadata using the spotify-scraper library.
+A simple API that extracts Spotify track metadata using the spotify-scraper library, built with a clean Model-View-Controller (MVC) architecture.
 
 ## Prerequisites
 
@@ -78,13 +78,37 @@ curl -X POST http://localhost:3000/get-metadata \
 }
 ```
 
+## Architecture Overview
+
+This application follows the Model-View-Controller (MVC) architectural pattern for better organization, maintainability, and scalability:
+
+### Models (`src/models/`)
+- **SpotifyMetadata.js**: Handles the interaction with the Python script for extracting Spotify metadata
+- Contains the business logic for data operations
+
+### Controllers (`src/controllers/`)
+- **SpotifyController.js**: Manages the request/response flow and implements the application's business logic
+- Interacts with models and prepares data for the response
+
+### Routes (`src/routes/`)
+- **spotifyRoutes.js**: Defines the API endpoints and maps them to controller methods
+- Includes input validation and middleware integration
+
+### Middleware (`src/middleware/`)
+- **validation.js**: Handles input validation for API requests
+- **errorHandler.js**: Manages error handling and provides consistent error responses
+
+### Utilities (`src/utils/`)
+- **config.js**: Centralized configuration management with environment variable support
+
 ## How it Works
 
 1. Client sends a POST request to `/get-metadata` with a Spotify URL
-2. The application validates the Spotify URL format
-3. A Python script is executed that uses the spotify-scraper library to extract track metadata
-4. The metadata is returned as a JSON response
-5. If the spotify-scraper library is not available, the application falls back to web scraping
+2. The request passes through validation middleware
+3. The controller validates the Spotify URL format
+4. The model executes a Python script using the spotify-scraper library to extract track metadata
+5. The metadata is returned as a JSON response
+6. If the spotify-scraper library is not available, the application falls back to web scraping
 
 ## Configuration
 
@@ -92,6 +116,9 @@ The application can be configured using environment variables:
 
 ```env
 PORT=3000
+PYTHON_PATH=python  # Path to Python executable (default: 'python')
+LOG_LEVEL=info      # Logging level (default: 'info')
+SPOTIFY_SCRAPER_TIMEOUT=30000  # Timeout for scraper operations in milliseconds
 ```
 
 Create a `.env` file in the root directory with these values to customize your setup.
@@ -108,7 +135,19 @@ npm run dev
 
 ```
 Spotify_Metadata_API/
-├── server.js               # Main Express server file
+├── server.js               # Main Express server file (MVC entry point)
+├── src/                    # Source code organized by MVC pattern
+│   ├── models/             # Data models and business logic
+│   │   └── SpotifyMetadata.js
+│   ├── controllers/        # Request handling and business logic controllers
+│   │   └── SpotifyController.js
+│   ├── routes/             # API route definitions
+│   │   └── spotifyRoutes.js
+│   ├── middleware/         # Request processing middleware
+│   │   ├── errorHandler.js
+│   │   └── validation.js
+│   └── utils/              # Utility functions and configurations
+│       └── config.js
 ├── spotify/                # Python scripts for metadata extraction
 │   └── spotify_metadata.py # Script that uses spotify-scraper
 ├── package.json            # Node.js dependencies and scripts
@@ -136,7 +175,7 @@ For any other issues:
 
 ## Dependencies
 
-- **Node.js**: Express.js for the web server
+- **Node.js**: Express.js for the web server, dotenv for configuration management
 - **Python**: 
   - `spotify-scraper` for extracting metadata from Spotify
   - `requests` for HTTP operations (fallback mechanism)
