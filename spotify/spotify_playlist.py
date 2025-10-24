@@ -26,10 +26,7 @@ def extract_playlist_metadata(spotify_url):
         # Get playlist data
         playlist = client.get_playlist_info(spotify_url)
         
-        # More comprehensive debug: Check what type of object we got and its content
-        print(f"DEBUG: Type of playlist object: {type(playlist)}", file=sys.stderr)
         if isinstance(playlist, list):
-            print(f"DEBUG: Playlist is a list with {len(playlist)} items. First item type: {type(playlist[0]) if len(playlist) > 0 else 'N/A'}", file=sys.stderr)
             result = {
                 'success': False,
                 'error': f'Unexpected response type: list instead of dict. First few items: {playlist[:2] if len(playlist) > 0 else []}'
@@ -37,18 +34,12 @@ def extract_playlist_metadata(spotify_url):
             print(json.dumps(result))
             sys.exit(1)
         elif not isinstance(playlist, dict):
-            print(f"DEBUG: Playlist is {type(playlist)} type instead of dict", file=sys.stderr)
             result = {
                 'success': False,
                 'error': f'Unexpected response type: {type(playlist)}. Expected dict.'
             }
             print(json.dumps(result))
             sys.exit(1)
-        else:
-            print(f"DEBUG: Playlist is a dict with keys: {list(playlist.keys())}", file=sys.stderr)
-        
-        # Get the tracks from the playlist, handling both dict and list formats
-        playlist_tracks_raw = playlist.get('tracks', [])
         
         result = {
             'success': True,
@@ -56,13 +47,13 @@ def extract_playlist_metadata(spotify_url):
                 'name': playlist.get('name', 'Unknown Playlist'),
                 'owner': playlist.get('owner', {}).get('display_name', 'Unknown Owner'),
                 'description': playlist.get('description', ''),
-                'track_count': playlist.get('track_count', 0),  # Using direct access since 'tracks' might be a list
+                'track_count': playlist.get('track_count', 0),
                 'id': playlist.get('id', ''),
                 'url': spotify_url,
                 'external_urls': playlist.get('external_urls', {}),
                 'followers': playlist.get('followers', {}).get('total', 0),
-                'images': playlist.get('images', []),  # List of images with different sizes
-                'public': playlist.get('public', None),  # Can be True, False, or None
+                'images': playlist.get('images', []),
+                'public': playlist.get('public', None),
                 'collaborative': playlist.get('collaborative', False),
                 'tracks': []
             }
