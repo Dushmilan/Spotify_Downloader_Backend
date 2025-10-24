@@ -94,6 +94,7 @@ class SpotifyMetadata {
             reject(new Error(errorResult.error || `Playlist metadata script error: ${stderr}`));
             return;
           } catch (e) {
+            console.error("Failed to parse stderr as JSON:", e); // Log the parsing error
             reject(new Error(`Non-JSON playlist metadata script error: ${stderr}`));
             return;
           }
@@ -204,3 +205,4 @@ class SpotifyMetadata {
 }
 
 module.exports = SpotifyMetadata;
+

@@ -32,14 +32,13 @@ def extract_playlist_metadata(spotify_url):
                 'error': f'Unexpected response type: list instead of dict. First few items: {playlist[:2] if len(playlist) > 0 else []}'
             }
             print(json.dumps(result))
-            sys.exit(1)
+
         elif not isinstance(playlist, dict):
             result = {
                 'success': False,
                 'error': f'Unexpected response type: {type(playlist)}. Expected dict.'
             }
             print(json.dumps(result))
-            sys.exit(1)
         
         result = {
             'success': True,
@@ -147,7 +146,7 @@ def extract_playlist_metadata(spotify_url):
                 'error': f'Error extracting playlist info: {error_msg}'
             }
         print(json.dumps(result))
-        sys.exit(1)
+
     finally:
         # Close the client
         try:
@@ -164,7 +163,6 @@ if __name__ == "__main__":
             'error': 'No Spotify playlist URL provided'
         }
         print(json.dumps(result))
-        sys.exit(1)
     
     spotify_url = sys.argv[1]
     
@@ -175,6 +173,6 @@ if __name__ == "__main__":
             'error': 'URL does not appear to be a Spotify playlist'
         }
         print(json.dumps(result))
-        sys.exit(1)
+
     
     extract_playlist_metadata(spotify_url)
