@@ -7,6 +7,7 @@ const { validateSpotifyUrl } = require('../middleware/validation');
 router.post('/get-metadata', validateSpotifyUrl, SpotifyController.getMetadata);
 router.post('/get-youtube_url',SpotifyController.getYoutubeUrl);
 router.post('/download-track',SpotifyController.downloadTrack);
+router.post('/download-playlist',SpotifyController.downloadPlaylist);
 
 
 // Health check endpoint
