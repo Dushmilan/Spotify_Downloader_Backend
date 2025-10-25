@@ -7,7 +7,9 @@ A comprehensive API that extracts Spotify track metadata and downloads tracks fr
 - **Spotify Metadata Extraction**: Extract detailed information from Spotify URLs including title, artist, album, duration, release date, track ID, preview URL, and more.
 - **YouTube URL Fetching**: Search and retrieve the best matching YouTube URL for a given track and artist.
 - **Track Downloading**: Download audio from YouTube as MP3 files with SponsorBlock integration to skip unwanted segments.
-- **SponsorBlock Integration**: Automatically skips sponsor segments, intros, and outros using SponsorBlock API.
+- **Playlist Downloading**: Download entire Spotify playlists with track numbering and organization, including playlist metadata in a JSON file.
+- **SponsorBlock Integration**: Automatically skips sponsor segments, intros, and outros using SponsorBlock API with manual FFmpeg-based segment removal when needed.
+- **Cookie Support**: Optional YouTube cookie integration to bypass age restrictions and other limitations (add cookies to `Cookies/music.youtube.com_cookies.txt`).
 - **MVC Architecture**: Clean separation of concerns with models, controllers, routes, and middleware.
 - **Error Handling**: Comprehensive error handling with appropriate HTTP status codes.
 - **Environment Configuration**: Flexible configuration using environment variables.
@@ -48,6 +50,7 @@ pip install -r requirements.txt
 4. (Optional) Add YouTube cookies for bypassing restrictions:
    - Create a file named `music.youtube.com_cookies.txt` in the `Cookies/` directory
    - Add cookies in Netscape format if bypassing age restrictions is needed
+   - The Python YouTube downloader will automatically use these cookies when available
 
 ## Configuration
 
@@ -141,6 +144,42 @@ curl -X POST http://localhost:3000/download-track \
 }
 ```
 
+### Playlist Downloading
+- `POST /download-playlist` - Download entire playlist from Spotify URL (full workflow)
+
+#### Example Request:
+```bash
+curl -X POST http://localhost:3000/download-playlist \
+  -H "Content-Type: application/json" \
+  -d '{
+    "spotifyUrl": "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
+  }'
+```
+
+#### Example Response:
+```json
+{
+  "message": "Playlist download completed. 15 tracks downloaded successfully, 2 tracks failed.",
+  "playlistName": "Some Playlist Name",
+  "totalTracks": 17,
+  "successfulDownloads": 15,
+  "failedDownloads": 2,
+  "directory": "downloads/Some Playlist Name",
+  "details": [
+    {
+      "track": "Track Name by Artist Name",
+      "status": "success",
+      "path": "downloads/Some Playlist Name/01 - Track Name - Artist Name.mp3"
+    },
+    {
+      "track": "Another Track by Another Artist", 
+      "status": "failed",
+      "error": "Could not find YouTube URL"
+    }
+  ]
+}
+```
+
 ## Architecture Overview
 
 This application follows the Model-View-Controller (MVC) architectural pattern for better organization, maintainability, and scalability:
@@ -161,7 +200,7 @@ This application follows the Model-View-Controller (MVC) architectural pattern f
 - Provides clear separation between different API endpoints
 
 ### Middleware (`src/middleware/`)
-- **validation.js**: Handles input validation for API requests (currently only validates Spotify URLs)
+- **validation.js**: Handles input validation for API requests (validates Spotify URLs and Spotify playlist URLs)
 - **errorHandler.js**: Manages error handling and provides consistent error responses
 - Includes 404 handling for undefined routes
 
@@ -232,11 +271,23 @@ Spotify_Downloader_Backend/
 6. The download is saved to the `downloads/` directory with the format: `{TrackName} - {ArtistName}.mp3`
 7. A success response is returned with the download path
 
+### Playlist Downloading Workflow (New Feature)
+1. Client sends a POST request to `/download-playlist` with a Spotify playlist URL
+2. The request passes through playlist URL validation
+3. The controller extracts playlist metadata using `spotify/spotify_playlist.py`
+4. A directory is created for the playlist (with sanitized name to remove invalid characters)
+5. A `playlist_info.json` file is created containing detailed playlist information
+6. Each track in the playlist is downloaded with individual error handling
+7. Track files are named with track numbers following the format: `{trackNumber} - {TrackName} - {ArtistName}.mp3` (e.g., `01 - Track Name - Artist Name.mp3`)
+8. A comprehensive response is returned with success/failure statistics for each track
+
 ### SponsorBlock Processing
 The YouTube downloader includes advanced SponsorBlock functionality:
 - Fetches segment data from SponsorBlock API
 - Automatically trims sponsor, intro, and outro segments using FFmpeg
 - Creates clean MP3 files without unwanted content
+- Implements manual segment removal when SponsorBlock postprocessor doesn't automatically trim
+- Removes temporary container files after successful MP3 creation to save space
 
 ## Dependencies
 
