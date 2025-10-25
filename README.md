@@ -10,8 +10,6 @@ A comprehensive API that extracts Spotify track metadata and downloads tracks fr
 - **Playlist Downloading**: Download entire Spotify playlists with track numbering and organization, including playlist metadata in a JSON file.
 - **SponsorBlock Integration**: Automatically skips sponsor segments, intros, and outros using SponsorBlock API with manual FFmpeg-based segment removal when needed.
 - **Cookie Support**: Optional YouTube cookie integration to bypass age restrictions and other limitations (add cookies to `Cookies/music.youtube.com_cookies.txt`).
-- **Microservices Architecture**: Scalable architecture with separate services for metadata, search, and download functionality.
-- **API Gateway**: Centralized entry point that routes requests to appropriate services.
 - **Error Handling**: Comprehensive error handling with appropriate HTTP status codes.
 - **Environment Configuration**: Flexible configuration using environment variables.
 
@@ -68,8 +66,7 @@ The application will use default values if environment variables are not set.
 
 ## Running the Application
 
-### Legacy Monolithic Application
-Start the original server (for backward compatibility):
+Start the server:
 ```bash
 npm start
 ```
@@ -80,70 +77,6 @@ npm run dev
 ```
 
 The server will run on `http://localhost:3000`
-
-### Microservices Architecture (Recommended)
-To run the new microservices architecture:
-
-1. Make sure you have Python and Node.js installed on your system
-
-2. Install dependencies for each service:
-   - For API Gateway: `cd microservices/api-gateway && npm install`
-   - For Metadata Service: `cd microservices/metadata-service && pip install -r requirements.txt`
-   - For Search Service: `cd microservices/search-service && pip install -r requirements.txt`
-   - For Download Service: `cd microservices/download-service && pip install -r requirements.txt`
-
-3. Run each service in separate terminals:
-   - API Gateway (port 3000): `cd microservices/api-gateway && npm start`
-   - Metadata Service (port 3001): `cd microservices/metadata-service && python app.py`
-   - Search Service (port 3002): `cd microservices/search-service && python app.py`
-   - Download Service (port 3003): `cd microservices/download-service && python app.py`
-
-4. The API Gateway will be available at `http://localhost:3000`
-
-Note: All services must be running for the full functionality to work. The API Gateway routes requests to the appropriate services.
-
-## Testing the Microservices Architecture
-
-The following test files are provided to verify the functionality of the microservices architecture:
-
-1. `test_metadata_service.js` - Tests the metadata service directly
-2. `test_search_service.js` - Tests the search service directly  
-3. `test_download_service.js` - Tests the download service directly
-4. `test_playlist_service.js` - Tests the playlist download service directly
-5. `test_full_workflow.js` - Tests the complete workflow via the API Gateway
-
-Each test file uses the sample URLs provided:
-- Sample Track: `https://open.spotify.com/track/4t7zKQ4BiRxjnSwlFBL9G3?si=37c11342c9ee435b`
-- Sample Playlist: `https://open.spotify.com/playlist/6d7vltVjUg8cia1Htfw9QU?si=ff8b813ed1734b28`
-
-### Running Tests
-
-To run the tests, first make sure all services are running as described in the "Running the Application" section above. Then run any test file with Node.js:
-
-```bash
-# Navigate to the microservices directory
-cd microservices
-
-# Run a specific test
-node test_metadata_service.js
-
-# Or run the full workflow test
-node test_full_workflow.js
-```
-
-Each test file includes instructions for running its corresponding service if it's not already running.
-
-### Individual Service Development
-You can also run individual services for development:
-
-1. Navigate to a service directory (e.g., `microservices/api-gateway`)
-2. Install dependencies: `npm install`
-3. Run the service: `npm start` or `npm run dev`
-
-For Python services:
-1. Navigate to a Python service directory (e.g., `microservices/metadata-service`)
-2. Install Python dependencies: `pip install -r requirements.txt`
-3. Run the service: `python app.py`
 
 ## API Endpoints
 
@@ -248,10 +181,9 @@ curl -X POST http://localhost:3000/download-playlist \
 
 ## Architecture Overview
 
-This application now supports both a legacy Model-View-Controller (MVC) architecture and a modern microservices architecture:
+This application uses a Model-View-Controller (MVC) architecture:
 
-### Legacy MVC Architecture (`src/`)
-For backward compatibility, the original MVC architecture is still available:
+### MVC Architecture (`src/`)
 
 #### Models (`src/models/`)
 - **SpotifyMetadata.js**: Handles the interaction with Python scripts for extracting Spotify metadata and fetching YouTube URLs
@@ -277,33 +209,6 @@ For backward compatibility, the original MVC architecture is still available:
 - **config.js**: Centralized configuration management with environment variable support
 - Handles default values and type conversion for configuration options
 
-### Modern Microservices Architecture (`microservices/`)
-The new architecture provides better scalability, maintainability, and fault isolation:
-
-#### API Gateway (`microservices/api-gateway/`)
-- **server.js**: Main entry point that routes requests to appropriate services
-- Handles cross-cutting concerns like authentication, rate limiting, and CORS
-- Aggregates responses from multiple backend services
-- Forwards requests to specialized services based on endpoint
-
-#### Metadata Service (`microservices/metadata-service/`)
-- **app.py**: Python Flask application that handles all Spotify metadata extraction operations
-- Executes Python scripts for metadata extraction
-- Provides caching for frequently requested metadata
-- Maintains the same Python integration as the legacy version
-
-#### Search Service (`microservices/search-service/`)
-- **app.py**: Python Flask application that handles YouTube URL fetching operations
-- Executes Python scripts for YouTube search
-- Provides clean separation of search functionality
-- Maintains the same search quality and accuracy as the legacy version
-
-#### Download Service (`microservices/download-service/`)
-- **app.py**: Python Flask application that handles audio download and processing operations
-- Manages both single track and playlist downloads
-- Implements SponsorBlock integration and FFmpeg processing
-- Handles file organization and storage coordination
-
 ## File Structure
 
 ```
@@ -320,11 +225,11 @@ Spotify_Downloader_Backend/
 ├── package-lock.json      # Lock file for Node.js dependencies
 ├── README.md              # This documentation
 ├── requirements.txt       # Python dependencies
-├── server.js              # Main Express server file (legacy - MVC entry point)
+├── server.js              # Main Express server file (MVC entry point)
 ├── spotify/               # Python scripts for Spotify metadata extraction
 │   ├── fetch_youtube_url.py     # Script that searches YouTube for tracks using yt-dlp
 │   └── spotify_metadata.py      # Script that uses spotify-scraper to extract metadata
-├── src/                   # Source code organized by MVC pattern (legacy)
+├── src/                   # Source code organized by MVC pattern
 │   ├── controllers/       # Request handling and business logic controllers
 │   │   └── SpotifyController.js
 │   ├── middleware/        # Request processing middleware
@@ -340,98 +245,26 @@ Spotify_Downloader_Backend/
 ├── tests/                 # Test files
 ├── youtube/               # Python scripts for YouTube downloading
 │   └── youtube_downloader.py     # Script that downloads audio from YouTube with SponsorBlock
-├── microservices/         # New microservices architecture
-│   ├── api-gateway/       # API Gateway service (Node.js/Express)
-│   │   ├── server.js      # Main gateway server
-│   │   ├── package.json   # Dependencies for API Gateway
-│   │   └── src/           # Source files
-│   ├── metadata-service/  # Metadata service (Python Flask)
-│   │   ├── app.py         # Metadata service Flask application
-│   │   ├── requirements.txt # Python dependencies for metadata service
-│   │   └── src/           # Source files
-│   ├── search-service/    # Search service (Python Flask)
-│   │   ├── app.py         # Search service Flask application
-│   │   ├── requirements.txt # Python dependencies for search service
-│   │   └── src/           # Source files
-│   └── download-service/  # Download service (Python Flask)
-│       ├── app.py         # Download service Flask application
-│       ├── requirements.txt # Python dependencies for download service
-│       └── src/           # Source files
 └── .gitignore            # Git ignore file
 ```
 
-## Microservices Architecture
-
-The application now uses a microservices architecture with the following services:
-
-### API Gateway (`microservices/api-gateway/`)
-- Main entry point for all client requests
-- Handles request routing to appropriate services
-- Provides authentication and authorization middleware
-- Implements rate limiting and request logging
-- Aggregates responses from multiple services
-- Manages CORS and security headers
-
-### Metadata Service (`microservices/metadata-service/`)
-- Handles Spotify metadata extraction using existing Python scripts
-- Provides `/metadata` endpoint for extracting Spotify track information
-- Implements caching layer for frequently requested metadata
-- Maintains the same functionality as the original implementation
-
-### Search Service (`microservices/search-service/`)
-- Handles YouTube URL fetching using existing Python scripts
-- Provides `/youtube-url` endpoint for searching YouTube
-- Maintains the same search functionality as the original implementation
-
-### Download Service (`microservices/download-service/`)
-- Handles audio download and processing using existing Python scripts
-- Manages both single track and playlist downloads
-- Implements SponsorBlock integration and FFmpeg processing
-- Handles file management and storage coordination
-
 ## How It Works
 
-### Legacy MVC Architecture Workflow
-In the original architecture:
+### MVC Architecture Workflow
+In the architecture:
 1. Client sends requests to the main server
 2. Requests are routed through `spotifyRoutes.js` to `SpotifyController.js`
 3. The controller uses models (`SpotifyMetadata.js` and `track_download.js`) to execute Python scripts
 4. Response is returned to the client
 
-### Microservices Architecture Workflow (Recommended)
-In the new microservices architecture:
-
-#### API Gateway
-1. Client sends requests to the API Gateway at `/get-metadata`, `/get-youtube_url`, `/download-track`, or `/download-playlist`
-2. Gateway validates request format and forwards to appropriate service
-3. Gateway aggregates results from services and returns to client
-
-#### Metadata Service
-1. Client request reaches the API Gateway which forwards to Metadata Service
-2. Metadata Service executes Python script (`spotify/spotify_metadata.py`) using the spotify-scraper library to extract track metadata
-3. Response is returned through the API Gateway to the client
-
-#### Search Service
-1. Client request reaches the API Gateway which forwards to Search Service
-2. Search Service executes Python script (`spotify/fetch_youtube_url.py`) using yt-dlp to search YouTube for the track
-3. Response is returned through the API Gateway to the client
-
-#### Download Service
-1. Client request reaches the API Gateway which forwards to Download Service
-2. Download Service orchestrates the process by first getting metadata, then the YouTube URL, then downloading the audio
-3. Download Service executes Python scripts for each step (`spotify/spotify_metadata.py`, `spotify/fetch_youtube_url.py`, and `youtube/youtube_downloader.py`)
-4. Results are saved to the `downloads/` directory
-5. Response is returned through the API Gateway to the client
-
-### Playlist Downloading Workflow (New Feature)
-1. Client sends a POST request to `/download-playlist` with a Spotify playlist URL (through API Gateway)
-2. The request is forwarded to the Download Service
-3. The controller extracts playlist metadata using `spotify/spotify_playlist.py`
-4. A directory is created for the playlist (with sanitized name to remove invalid characters)
-5. A `playlist_info.json` file is created containing detailed playlist information
-6. Each track in the playlist is downloaded with individual error handling
-7. Track files are named with track numbers following the format: `{trackNumber} - {TrackName} - {ArtistName}.mp3` (e.g., `01 - Track Name - Artist Name.mp3`)
-8. A comprehensive response is returned with success/failure statistics for each track
+### Playlist Downloading Workflow
+1. Client sends a POST request to `/download-playlist` with a Spotify playlist URL
+2. The controller extracts playlist metadata using `spotify/spotify_playlist.py`
+3. A directory is created for the playlist (with sanitized name to remove invalid characters)
+4. A `playlist_info.json` file is created containing detailed playlist information
+5. Each track in the playlist is downloaded with individual error handling
+6. Track files are named with track numbers following the format: `{trackNumber} - {TrackName} - {ArtistName}.mp3` (e.g., `01 - Track Name - Artist Name.mp3`)
+7. A comprehensive response is returned with success/failure statistics for each track
 
 ### SponsorBlock Processing
 The YouTube downloader includes advanced SponsorBlock functionality:

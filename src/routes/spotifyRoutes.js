@@ -1,16 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const SpotifyController = require('../controllers/SpotifyController');
-const { validateSpotifyUrl } = require('../middleware/validation');
+const { getSpotifyMetadata, getSpotifyPlaylist } = require('../controllers/spotifyController');
 
-// Endpoint to get Spotify track metadata
-router.post('/get-metadata', validateSpotifyUrl, SpotifyController.getMetadata);
-router.post('/get-youtube_url',SpotifyController.getYoutubeUrl);
-router.post('/download-track',SpotifyController.downloadTrack);
-router.post('/download-playlist',SpotifyController.downloadPlaylist);
+// Endpoint to extract metadata from a Spotify URL
+router.get('/metadata', getSpotifyMetadata);
 
-
-// Health check endpoint
-router.get('/', SpotifyController.healthCheck);
+// Endpoint to get tracks from a Spotify playlist
+router.get('/playlist', getSpotifyPlaylist);
 
 module.exports = router;
