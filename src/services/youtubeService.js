@@ -59,16 +59,10 @@ class YouTubeService {
     }
 
     try {
-      // Determine the appropriate Python script based on what's available in the youtube directory
-      // For now, assuming there's a script in the youtube directory that can handle downloading
-      // Since the exact script isn't specified in the project structure, we'll create a generic approach
-      // that can be adapted based on the actual implementation
+      // Use the youtube_downloader.py script which is the actual script in the youtube directory
+      const downloadScriptPath = path.join(__dirname, '../../youtube/youtube_downloader.py');
       
-      // If there's a specific download script in the youtube directory, use that
-      const downloadScriptPath = path.join(__dirname, '../../youtube/download.py');
-      
-      // Check if the specific download script exists, if not use a general approach
-      // We'll try to execute with the provided URL and path
+      // Execute the Python script with the YouTube URL and output path as arguments
       const result = await executePythonScript(downloadScriptPath, [youtubeUrl, outputPath], { timeout: 120000 });
       
       logger.info(`Successfully downloaded audio from YouTube URL: ${youtubeUrl} to ${outputPath}`);
@@ -79,14 +73,6 @@ class YouTubeService {
         outputPath,
         error: error.stderr || error.message
       });
-      
-      // If the specific youtube script doesn't exist, try to use the fetch_youtube_url script as fallback
-      if (error.code === 'ENOENT' || (error.stderr && error.stderr.includes('No such file'))) {
-        logger.info('Specific YouTube download script not found, using alternative approach');
-        
-        // Fallback: just return the URL as confirmation that it's valid
-        return { message: 'Download functionality not yet implemented', youtubeUrl, outputPath };
-      }
       
       throw error;
     }
